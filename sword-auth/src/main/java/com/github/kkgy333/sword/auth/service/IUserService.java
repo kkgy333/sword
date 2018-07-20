@@ -1,6 +1,6 @@
 package com.github.kkgy333.sword.auth.service;
 
-import com.baomidou.mybatisplus.service.IService;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.github.kkgy333.sword.auth.model.User;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -41,4 +41,6 @@ public interface IUserService extends IService<User> {
      */
     User getByAccount(@Param("account") String account);
 
+
+    List<User> selectListBySQL();
 }

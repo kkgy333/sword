@@ -1,11 +1,12 @@
-package com.github.kkgy333.sword.auth.dao;
+package com.github.kkgy333.sword.auth.mapper;
 
-import com.baomidou.mybatisplus.mapper.BaseMapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.github.kkgy333.sword.auth.model.User;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Author: kkgy333
@@ -37,4 +38,7 @@ public interface UserMapper extends BaseMapper<User> {
      * 通过账号获取用户
      */
     User getByAccount(@Param("account") String account);
+
+    @Select("select test_id as id, name, age, test_type from user")
+    List<User> selectListBySQL();
 }

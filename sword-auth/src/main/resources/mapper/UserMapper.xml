@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.github.kkgy333.sword.auth.dao.UserMapper">
-
+<mapper namespace="com.github.kkgy333.sword.auth.mapper.UserMapper">
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.github.kkgy333.sword.auth.model.User">
         <id column="id" property="id" />
@@ -28,19 +27,7 @@
 		createtime, version
 	</sql>
 
-    <sql id="Base_Column_List_With_Pwd">
-		id, account, name, birthday,password, sex, email, avatar,
-		phone, roleid,salt,
-		deptid, status,
-		createtime, version
-	</sql>
-
-
-
-    <select id="getByAccount" resultType="user">
-        select
-        <include refid="Base_Column_List_With_Pwd" />
-        from sys_user where account = #{account} and status != 3
-    </select>
-
+    <delete id="deleteAll">
+		DELETE FROM USER
+	</delete>
 </mapper>

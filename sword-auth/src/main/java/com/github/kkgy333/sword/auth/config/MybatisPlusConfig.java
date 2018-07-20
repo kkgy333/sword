@@ -1,111 +1,90 @@
 package com.github.kkgy333.sword.auth.config;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.alibaba.druid.pool.DruidDataSource;
-import com.baomidou.mybatisplus.plugins.PaginationInterceptor;
-import com.github.kkgy333.sword.auth.constants.DatasourceEnum;
-import com.github.kkgy333.sword.auth.core.datasource.DruidProperties;
-import com.github.kkgy333.sword.auth.core.mutidatasource.DynamicDataSource;
-import org.mybatis.spring.annotation.MapperScan;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.mybatis.spring.mapper.MapperScannerConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import java.sql.SQLException;
-import java.util.HashMap;
+import com.baomidou.mybatisplus.core.parser.ISqlParser;
+import com.baomidou.mybatisplus.extension.incrementer.H2KeyGenerator;
+import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.tenant.TenantHandler;
+import com.baomidou.mybatisplus.extension.plugins.tenant.TenantSqlParser;
 
-/**
- * Author: kkgy333
- * Date: 2018/7/5
- **/
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.LongValue;
+
 @Configuration
-@EnableTransactionManagement(order = 2)//由于引入多数据源，所以让spring事务的aop要在多数据源切换aop的后面
-@MapperScan(basePackages = {"com.github.kkgy333.sword.auth.dao"})
+//@MapperScan("com.baomidou.springboot.mapper*")//这个注解，作用相当于下面的@Bean MapperScannerConfigurer，2者配置1份即可
 public class MybatisPlusConfig {
 
-    @Autowired
-    DruidProperties druidProperties;
-
-//    @Autowired
-//    MutiDataSourceProperties mutiDataSourceProperties;
-
     /**
-     * 另一个数据源
-     */
-    private DruidDataSource bizDataSource() {
-        DruidDataSource dataSource = new DruidDataSource();
-        druidProperties.config(dataSource);
-//        mutiDataSourceProperties.config(dataSource);
-        return dataSource;
-    }
-
-    /**
-     * sword的数据源
-     */
-    private DruidDataSource dataSourceSword() {
-        DruidDataSource dataSource = new DruidDataSource();
-        druidProperties.config(dataSource);
-        return dataSource;
-    }
-
-    /**
-     * 单数据源连接池配置
-     */
-    @Bean
-    @ConditionalOnProperty(prefix = "sword", name = "muti-datasource-open", havingValue = "false")
-    public DruidDataSource singleDatasource() {
-        return dataSourceSword();
-    }
-
-    /**
-     * 多数据源连接池配置
-     */
-    @Bean
-    @ConditionalOnProperty(prefix = "sword", name = "muti-datasource-open", havingValue = "true")
-    public DynamicDataSource mutiDataSource() {
-
-        DruidDataSource dataSourceSword = dataSourceSword();
-        DruidDataSource bizDataSource = bizDataSource();
-
-        try {
-            dataSourceSword.init();
-            bizDataSource.init();
-        } catch (SQLException sql) {
-            sql.printStackTrace();
-        }
-
-        DynamicDataSource dynamicDataSource = new DynamicDataSource();
-        HashMap<Object, Object> hashMap = new HashMap();
-        hashMap.put(DatasourceEnum.DATA_SOURCE_SWORD, dataSourceSword);
-        hashMap.put(DatasourceEnum.DATA_SOURCE_BIZ, bizDataSource);
-        dynamicDataSource.setTargetDataSources(hashMap);
-        dynamicDataSource.setDefaultTargetDataSource(dataSourceSword);
-        return dynamicDataSource;
-    }
-
-    /**
-     * mybatis-plus分页插件
+     * mybatis-plus分页插件<br>
+     * 文档：http://mp.baomidou.com<br>
      */
     @Bean
     public PaginationInterceptor paginationInterceptor() {
-        return new PaginationInterceptor();
+        PaginationInterceptor paginationInterceptor = new PaginationInterceptor();
+        // 开启 PageHelper 的支持
+        paginationInterceptor.setLocalPage(true);
+        /*
+         * 【测试多租户】 SQL 解析处理拦截器<br>
+         * 这里固定写成住户 1 实际情况你可以从cookie读取，因此数据看不到 【 麻花藤 】 这条记录（ 注意观察 SQL ）<br>
+         */
+        List<ISqlParser> sqlParserList = new ArrayList<>();
+        TenantSqlParser tenantSqlParser = new TenantSqlParser();
+        tenantSqlParser.setTenantHandler(new TenantHandler() {
+            @Override
+            public Expression getTenantId() {
+                return new LongValue(1L);
+            }
+
+            @Override
+            public String getTenantIdColumn() {
+                return "id";
+            }
+            @Override
+            public boolean doTableFilter(String tableName) {
+                // 这里可以判断是否过滤表
+                /*if ("user".equals(tableName)) {
+                    return true;
+                }*/
+                return false;
+            }
+        });
+
+        sqlParserList.add(tenantSqlParser);
+        paginationInterceptor.setSqlParserList(sqlParserList);
+//        paginationInterceptor.setSqlParserFilter(new ISqlParserFilter() {
+//            @Override
+//            public boolean doFilter(MetaObject metaObject) {
+//                MappedStatement ms = PluginUtils.getMappedStatement(metaObject);
+//                // 过滤自定义查询此时无租户信息约束【 麻花藤 】出现
+//                if ("com.baomidou.springboot.mapper.UserMapper.selectListBySQL".equals(ms.getId())) {
+//                    return true;
+//                }
+//                return false;
+//            }
+//        });
+        return paginationInterceptor;
     }
 
     /**
-     * 数据范围mybatis插件
+     * 相当于顶部的：
+     * {@code @MapperScan("com.baomidou.springboot.mapper*")}
+     * 这里可以扩展，比如使用配置文件来配置扫描Mapper的路径
      */
-//    @Bean
-//    public DataScopeInterceptor dataScopeInterceptor() {
-//        return new DataScopeInterceptor();
-//    }
+    @Bean
+    public MapperScannerConfigurer mapperScannerConfigurer() {
+        MapperScannerConfigurer scannerConfigurer = new MapperScannerConfigurer();
+        scannerConfigurer.setBasePackage("com.github.kkgy333.sword.auth.mapper*");
+        return scannerConfigurer;
+    }
 
-    /**
-     * 乐观锁mybatis插件
-     */
-//    @Bean
-//    public OptimisticLockerInterceptor optimisticLockerInterceptor() {
-//        return new OptimisticLockerInterceptor();
-//    }
-
+    @Bean
+    public H2KeyGenerator getH2KeyGenerator() {
+        return new H2KeyGenerator();
+    }
 }
+

@@ -1,13 +1,13 @@
 package com.github.kkgy333.sword.auth.service.impl;
 
-import com.baomidou.mybatisplus.service.impl.ServiceImpl;
-import com.github.kkgy333.sword.auth.dao.UserMapper;
+
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.github.kkgy333.sword.auth.mapper.UserMapper;
 import com.github.kkgy333.sword.auth.model.User;
 import com.github.kkgy333.sword.auth.service.IUserService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Author: kkgy333
@@ -39,5 +39,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public User getByAccount(String account) {
         return this.baseMapper.getByAccount(account);
+    }
+
+
+    @Override
+    public List<User> selectListBySQL() {
+        return baseMapper.selectListBySQL();
     }
 }
