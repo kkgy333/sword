@@ -6,7 +6,11 @@
 
     <groupId>com.github.kkgy333</groupId>
     <artifactId>sword-root</artifactId>
+    <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
+    <modules>
+        <module>sword-fabric-service</module>
+    </modules>
 
 
 </project>
