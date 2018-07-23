@@ -7,7 +7,7 @@ import java.util.Locale;
  *
  * @author : Aberic 【2018/5/10 11:31】
  */
-class Utils {
+public class Utils {
 
     /**
      * 将日期转换为字符串

@@ -1,11 +1,12 @@
 package com.github.kkgy333.sword.fabric.sdk;
 
-import com.alibaba.fastjson.JSONObject;
+
 import org.hyperledger.fabric.sdk.exception.ChaincodeEndorsementPolicyParseException;
 import org.hyperledger.fabric.sdk.exception.InvalidArgumentException;
 import org.hyperledger.fabric.sdk.exception.ProposalException;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -23,7 +24,7 @@ public class FabricManager {
     }
 
     /** 安装智能合约 */
-    public JSONObject install(String version) throws ProposalException, InvalidArgumentException {
+    public Map<String, String> install(String version) throws ProposalException, InvalidArgumentException {
         return org.getChainCode().install(org, version);
     }
 
@@ -32,7 +33,7 @@ public class FabricManager {
      *
      * @param args 初始化参数数组
      */
-    public JSONObject instantiate(String[] args) throws ProposalException, InvalidArgumentException, IOException, ChaincodeEndorsementPolicyParseException, InterruptedException, ExecutionException, TimeoutException {
+    public Map<String, String> instantiate(String[] args) throws ProposalException, InvalidArgumentException, IOException, ChaincodeEndorsementPolicyParseException, InterruptedException, ExecutionException, TimeoutException {
         return org.getChainCode().instantiate(org, args);
     }
 
@@ -41,7 +42,7 @@ public class FabricManager {
      *
      * @param args 初始化参数数组
      */
-    public JSONObject upgrade(String[] args) throws ProposalException, InvalidArgumentException, IOException, ChaincodeEndorsementPolicyParseException, InterruptedException, ExecutionException, TimeoutException {
+    public Map<String, String> upgrade(String[] args) throws ProposalException, InvalidArgumentException, IOException, ChaincodeEndorsementPolicyParseException, InterruptedException, ExecutionException, TimeoutException {
         return org.getChainCode().upgrade(org, args);
     }
 
@@ -51,7 +52,7 @@ public class FabricManager {
      * @param fcn  方法名
      * @param args 参数数组
      */
-    public JSONObject invoke(String fcn, String[] args) throws InvalidArgumentException, ProposalException, IOException, InterruptedException, ExecutionException, TimeoutException {
+    public Map<String, String> invoke(String fcn, String[] args) throws InvalidArgumentException, ProposalException, IOException, InterruptedException, ExecutionException, TimeoutException {
         return org.getChainCode().invoke(org, fcn, args);
     }
 
@@ -61,7 +62,7 @@ public class FabricManager {
      * @param fcn  方法名
      * @param args 参数数组
      */
-    public JSONObject query(String fcn, String[] args, String version) throws InvalidArgumentException, ProposalException {
+    public Map<String, String> query(String fcn, String[] args, String version) throws InvalidArgumentException, ProposalException {
         return org.getChainCode().query(org, fcn, args, version);
     }
 
@@ -70,7 +71,7 @@ public class FabricManager {
      *
      * @param txID transactionID
      */
-    public JSONObject queryBlockByTransactionID(String txID) throws ProposalException, IOException, InvalidArgumentException {
+    public Map<String, String> queryBlockByTransactionID(String txID) throws ProposalException, IOException, InvalidArgumentException {
         return org.getChannel().queryBlockByTransactionID(txID);
     }
 
@@ -79,7 +80,7 @@ public class FabricManager {
      *
      * @param blockHash hash
      */
-    public JSONObject queryBlockByHash(byte[] blockHash) throws ProposalException, IOException, InvalidArgumentException {
+    public Map<String, String> queryBlockByHash(byte[] blockHash) throws ProposalException, IOException, InvalidArgumentException {
         return org.getChannel().queryBlockByHash(blockHash);
     }
 
@@ -88,7 +89,7 @@ public class FabricManager {
      *
      * @param blockNumber 区块高度
      */
-    public JSONObject queryBlockByNumber(long blockNumber) throws ProposalException, IOException, InvalidArgumentException {
+    public Map<String, String> queryBlockByNumber(long blockNumber) throws ProposalException, IOException, InvalidArgumentException {
         return org.getChannel().queryBlockByNumber(blockNumber);
     }
 
@@ -101,13 +102,14 @@ public class FabricManager {
      * @param peerEventHubLocation 当前指定的组织节点事件监听访问地址
      * @param isEventListener      当前peer是否增加Event事件处理
      */
-    public JSONObject joinPeer(String peerName, String peerEventHubName, String peerLocation, String peerEventHubLocation, boolean isEventListener, String serverCrtPath) throws ProposalException, InvalidArgumentException {
-        return org.getChannel().joinPeer(new IntermediatePeer(peerName, peerEventHubName, peerLocation, peerEventHubLocation, isEventListener, serverCrtPath));
+    public Map<String, String> joinPeer(String peerName, String peerEventHubName, String peerLocation, String peerEventHubLocation, boolean isEventListener) throws ProposalException, InvalidArgumentException {
+        return org.getChannel().joinPeer(new IntermediatePeer(peerName, peerEventHubName, peerLocation, peerEventHubLocation, isEventListener));
     }
 
     /** 查询当前频道的链信息，包括链长度、当前最新区块hash以及当前最新区块的上一区块hash */
-    public JSONObject getBlockchainInfo() throws ProposalException, InvalidArgumentException {
+    public Map<String, String> getBlockchainInfo() throws ProposalException, InvalidArgumentException {
         return org.getChannel().getBlockchainInfo();
     }
 
 }
+

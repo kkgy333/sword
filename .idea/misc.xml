@@ -5,8 +5,8 @@
     <option name="originalFiles">
       <list>
         <option value="$PROJECT_DIR$/pom.xml" />
-        <option value="$PROJECT_DIR$/sword-auth/pom.xml" />
         <option value="$PROJECT_DIR$/sword-fabric-sdk/pom.xml" />
+        <option value="$PROJECT_DIR$/sword-auth/pom.xml" />
       </list>
     </option>
   </component>

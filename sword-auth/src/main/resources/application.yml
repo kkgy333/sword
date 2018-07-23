@@ -21,7 +21,7 @@ spring:
 
   # H2 DATABASE CONFIG
   datasource:
-      url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/guns?useUnicode=true&characterEncoding=UTF8&useSSL=false
+      url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/guns?useUnicode=true&characterEncoding=UTF8&useSSL=false&allowPublicKeyRetrieval=true
       username: root
       password: "!QAZ2wsx"
       # 使用druid数据源

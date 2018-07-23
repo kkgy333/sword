@@ -19,10 +19,6 @@ class IntermediateUser implements User, Serializable {
 
     /** 名称 */
     private String name;
-    /** 带有节点签名密钥的PEM文件——sk */
-    private String skPath;
-    /** 带有节点的X.509证书的PEM文件——certificate */
-    private String certificatePath;
     /** 规则 */
     private Set<String> roles;
     /** 账户 */
@@ -45,35 +41,22 @@ class IntermediateUser implements User, Serializable {
     /**
      * Fabric网络用户对象
      *
-     * @param name            用户名称（User1）
-     * @param skPath          带有节点签名密钥的PEM文件——sk路径
-     * @param certificatePath 带有节点的X.509证书的PEM文件——certificate路径
+     * @param name    用户名称（User1）
+     * @param orgName 组织名称（Org1）
+     * @param store   联盟存储配置对象
      */
-    IntermediateUser(String name, String skPath, String certificatePath) {
+    IntermediateUser(String name, String orgName, FabricStore store) {
         this.name = name;
-        this.skPath = skPath;
-        this.certificatePath = certificatePath;
-        this.keyForFabricStoreName = getKeyForFabricStoreName(this.name, skPath, certificatePath);
-    }
+        this.organization = orgName;
+        this.fabricStore = store;
+        this.keyForFabricStoreName = getKeyForFabricStoreName(this.name, orgName);
 
-    void setFabricStore(FabricStore fabricStore) {
-        this.fabricStore = fabricStore;
-    }
-
-    String getSkPath() {
-        return skPath;
-    }
-
-    public void setSkPath(String skPath) {
-        this.skPath = skPath;
-    }
-
-    String getCertificatePath() {
-        return certificatePath;
-    }
-
-    public void setCertificatePath(String certificatePath) {
-        this.certificatePath = certificatePath;
+        String memberStr = fabricStore.getValue(keyForFabricStoreName);
+        if (null != memberStr) {
+            saveState();
+        } else {
+            restoreState();
+        }
     }
 
     /**
@@ -246,26 +229,11 @@ class IntermediateUser implements User, Serializable {
      *
      * @param name 用户名称（User1）
      * @param org  组织名称（Org1）
-     *
      * @return 类似user.Org1User1.Org1
      */
     static String getKeyForFabricStoreName(String name, String org) {
         System.out.println("toKeyValStoreName = " + "user." + name + org);
         return "user." + name + org;
-    }
-
-    /**
-     * 得到联盟存储配置对象key
-     *
-     * @param name            用户名称（User1）
-     * @param skPath          带有节点签名密钥的PEM文件——sk路径
-     * @param certificatePath 带有节点的X.509证书的PEM文件——certificate路径
-     *
-     * @return 类似user.Org1User1.Org1
-     */
-    static String getKeyForFabricStoreName(String name, String skPath, String certificatePath) {
-        System.out.println(String.format("toKeyValStoreName = user.%s%s%s", name, skPath, certificatePath));
-        return String.format("user.%s%s%s", name, skPath, certificatePath);
     }
 
 }
