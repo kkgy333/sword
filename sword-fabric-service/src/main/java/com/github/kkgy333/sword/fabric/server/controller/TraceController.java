@@ -1,5 +1,7 @@
 package com.github.kkgy333.sword.fabric.server.controller;
 
+import com.github.kkgy333.sword.fabric.server.bean.Trace;
+import com.github.kkgy333.sword.fabric.server.service.TraceService;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;

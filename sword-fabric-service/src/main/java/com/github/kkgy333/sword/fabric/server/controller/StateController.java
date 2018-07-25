@@ -1,5 +1,7 @@
 package com.github.kkgy333.sword.fabric.server.controller;
 
+import com.github.kkgy333.sword.fabric.server.bean.State;
+import com.github.kkgy333.sword.fabric.server.service.StateService;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;

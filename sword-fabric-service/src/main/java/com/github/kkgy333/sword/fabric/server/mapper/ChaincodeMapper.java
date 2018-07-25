@@ -17,12 +17,12 @@ public interface ChaincodeMapper {
     int add(@Param("c") Chaincode chaincode);
 
     @Update("update chaincode set name=#{c.name}, path=#{c.path}, version=#{c.version}, " +
-            "proposal_wait_time=#{c.proposalWaitTime}, open=#{c.open} where rowid=#{c.id}")
+            "proposal_wait_time=#{c.proposalWaitTime}, open=#{c.open} where id=#{c.id}")
     int update(@Param("c") Chaincode chaincode);
 
     @Update("update chaincode set name=#{c.name}, path=#{c.path}, version=#{c.version}, " +
             "proposal_wait_time=#{c.proposalWaitTime}, source=#{c.source}, policy=#{c.policy}, " +
-            "open=#{c.open} where rowid=#{c.id}")
+            "open=#{c.open} where id=#{c.id}")
     int updateForUpgrade(@Param("c") Chaincode chaincode);
 
     @Select("select count(name) from chaincode where channel_id=#{id}")
@@ -31,16 +31,16 @@ public interface ChaincodeMapper {
     @Select("select count(name) from chaincode")
     int countAll();
 
-    @Delete("delete from chaincode where rowid=#{id}")
+    @Delete("delete from chaincode where id=#{id}")
     int delete(@Param("id") int id);
 
     @Delete("delete from chaincode where channel_id=#{channelId}")
     int deleteAll(@Param("channelId") int channelId);
 
-    @Select("select rowid,name,path,version,proposal_wait_time,channel_id,date,source,policy,open from chaincode " +
+    @Select("select id,name,path,version,proposal_wait_time,channel_id,date,source,policy,open from chaincode " +
             "where name=#{c.name} and path=#{c.path} and version=#{c.version} and channel_id=#{c.channelId}")
     @Results({
-            @Result(property = "id", column = "rowid"),
+            @Result(property = "id", column = "id"),
             @Result(property = "name", column = "name"),
             @Result(property = "path", column = "path"),
             @Result(property = "version", column = "version"),
@@ -53,9 +53,9 @@ public interface ChaincodeMapper {
     })
     Chaincode check(@Param("c") Chaincode chaincode);
 
-    @Select("select rowid,name,path,version,proposal_wait_time,channel_id,date,source,policy,open from chaincode where rowid=#{id}")
+    @Select("select id,name,path,version,proposal_wait_time,channel_id,date,source,policy,open from chaincode where id=#{id}")
     @Results({
-            @Result(property = "id", column = "rowid"),
+            @Result(property = "id", column = "id"),
             @Result(property = "name", column = "name"),
             @Result(property = "path", column = "path"),
             @Result(property = "version", column = "version"),
@@ -68,9 +68,9 @@ public interface ChaincodeMapper {
     })
     Chaincode get(@Param("id") int id);
 
-    @Select("select rowid,name,path,version,proposal_wait_time,channel_id,date,source,policy,open from chaincode where channel_id=#{id}")
+    @Select("select id,name,path,version,proposal_wait_time,channel_id,date,source,policy,open from chaincode where channel_id=#{id}")
     @Results({
-            @Result(property = "id", column = "rowid"),
+            @Result(property = "id", column = "id"),
             @Result(property = "name", column = "name"),
             @Result(property = "path", column = "path"),
             @Result(property = "version", column = "version"),
@@ -83,9 +83,9 @@ public interface ChaincodeMapper {
     })
     List<Chaincode> list(@Param("id") int id);
 
-    @Select("select rowid,name,path,version,proposal_wait_time,channel_id,date,source,policy,open from chaincode")
+    @Select("select id,name,path,version,proposal_wait_time,channel_id,date,source,policy,open from chaincode")
     @Results({
-            @Result(property = "id", column = "rowid"),
+            @Result(property = "id", column = "id"),
             @Result(property = "name", column = "name"),
             @Result(property = "path", column = "path"),
             @Result(property = "version", column = "version"),

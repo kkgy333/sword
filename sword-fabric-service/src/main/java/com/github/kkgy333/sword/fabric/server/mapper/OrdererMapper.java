@@ -15,7 +15,7 @@ public interface OrdererMapper {
     @Insert("insert into orderer (name,location,org_id,date) values (#{o.name},#{o.location},#{o.orgId},#{o.date})")
     int add(@Param("o") Orderer orderer);
 
-    @Update("update orderer set name=#{o.name}, location=#{o.location} where rowid=#{o.id}")
+    @Update("update orderer set name=#{o.name}, location=#{o.location} where id=#{o.id}")
     int update(@Param("o") Orderer orderer);
 
     @Select("select count(name) from orderer where org_id=#{id}")
@@ -24,15 +24,15 @@ public interface OrdererMapper {
     @Select("select count(name) from orderer")
     int countAll();
 
-    @Delete("delete from orderer where rowid=#{id}")
+    @Delete("delete from orderer where id=#{id}")
     int delete(@Param("id") int id);
 
     @Delete("delete from orderer where org_id=#{orgId}")
     int deleteAll(@Param("orgId") int orgId);
 
-    @Select("select rowid,name,location,org_id,date from orderer where rowid=#{id}")
+    @Select("select id,name,location,org_id,date from orderer where id=#{id}")
     @Results({
-            @Result(property = "id", column = "rowid"),
+            @Result(property = "id", column = "id"),
             @Result(property = "name", column = "name"),
             @Result(property = "location", column = "location"),
             @Result(property = "orgId", column = "org_id"),
@@ -40,9 +40,9 @@ public interface OrdererMapper {
     })
     Orderer get(@Param("id") int id);
 
-    @Select("select rowid,name,location,org_id,date from orderer where org_id=#{id}")
+    @Select("select id,name,location,org_id,date from orderer where org_id=#{id}")
     @Results({
-            @Result(property = "id", column = "rowid"),
+            @Result(property = "id", column = "id"),
             @Result(property = "name", column = "name"),
             @Result(property = "location", column = "location"),
             @Result(property = "orgId", column = "org_id"),
@@ -50,9 +50,9 @@ public interface OrdererMapper {
     })
     List<Orderer> list(@Param("id") int id);
 
-    @Select("select rowid,name,location,org_id,date from orderer")
+    @Select("select id,name,location,org_id,date from orderer")
     @Results({
-            @Result(property = "id", column = "rowid"),
+            @Result(property = "id", column = "id"),
             @Result(property = "name", column = "name"),
             @Result(property = "location", column = "location"),
             @Result(property = "orgId", column = "org_id"),

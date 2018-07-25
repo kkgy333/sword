@@ -13,6 +13,7 @@ sword:
 server:
     port: 8080
 
+
 #spring
 spring:
   devtools:
@@ -21,7 +22,7 @@ spring:
 
   # H2 DATABASE CONFIG
   datasource:
-      url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/guns?useUnicode=true&characterEncoding=UTF8&useSSL=false&allowPublicKeyRetrieval=true
+      url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/sword?useUnicode=true&characterEncoding=UTF8&useSSL=false&allowPublicKeyRetrieval=true
       username: root
       password: "!QAZ2wsx"
       # 使用druid数据源
@@ -40,6 +41,14 @@ spring:
       testOnReturn: false
       poolPreparedStatements: true
       maxOpenPreparedStatements: 20
+  mvc:
+    static-path-pattern: /static/**
+  thymeleaf:
+    encoding: UTF-8
+    cache: false
+  messages:
+    basename: message
+
 
 #mybatis
 mybatis-plus:

@@ -17,7 +17,7 @@ public interface PeerMapper {
     int add(@Param("p") Peer peer);
 
     @Update("update peer set name=#{p.name}, event_hub_name=#{p.eventHubName}, location=#{p.location}" +
-            ", event_hub_location=#{p.eventHubLocation}, event_listener=#{p.eventListener} where rowid=#{p.id}")
+            ", event_hub_location=#{p.eventHubLocation}, event_listener=#{p.eventListener} where id=#{p.id}")
     int update(@Param("p") Peer peer);
 
     @Select("select count(name) from peer where org_id=#{id}")
@@ -26,15 +26,15 @@ public interface PeerMapper {
     @Select("select count(name) from peer")
     int countAll();
 
-    @Delete("delete from peer where rowid=#{id}")
+    @Delete("delete from peer where id=#{id}")
     int delete(@Param("id") int id);
 
     @Delete("delete from peer where org_id=#{orgId}")
     int deleteAll(@Param("orgId") int orgId);
 
-    @Select("select rowid,name,event_hub_name,location,event_hub_location,event_listener,org_id,date from peer where rowid=#{id}")
+    @Select("select id,name,event_hub_name,location,event_hub_location,event_listener,org_id,date from peer where id=#{id}")
     @Results({
-            @Result(property = "id", column = "rowid"),
+            @Result(property = "id", column = "id"),
             @Result(property = "name", column = "name"),
             @Result(property = "eventHubName", column = "event_hub_name"),
             @Result(property = "location", column = "location"),
@@ -45,9 +45,9 @@ public interface PeerMapper {
     })
     Peer get(@Param("id") int id);
 
-    @Select("select rowid,name,event_hub_name,location,event_hub_location,event_listener,org_id,date from peer where org_id=#{id}")
+    @Select("select id,name,event_hub_name,location,event_hub_location,event_listener,org_id,date from peer where org_id=#{id}")
     @Results({
-            @Result(property = "id", column = "rowid"),
+            @Result(property = "id", column = "id"),
             @Result(property = "name", column = "name"),
             @Result(property = "eventHubName", column = "event_hub_name"),
             @Result(property = "location", column = "location"),
@@ -58,9 +58,9 @@ public interface PeerMapper {
     })
     List<Peer> list(@Param("id") int id);
 
-    @Select("select rowid,name,event_hub_name,location,event_hub_location,event_listener,org_id,date from peer")
+    @Select("select id,name,event_hub_name,location,event_hub_location,event_listener,org_id,date from peer")
     @Results({
-            @Result(property = "id", column = "rowid"),
+            @Result(property = "id", column = "id"),
             @Result(property = "name", column = "name"),
             @Result(property = "eventHubName", column = "event_hub_name"),
             @Result(property = "location", column = "location"),
