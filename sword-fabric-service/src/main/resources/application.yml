@@ -9,9 +9,21 @@ sword:
   session-validation-interval: 900 #多久检测一次失效的session(只在单机环境下生效) 单位：秒
 
 
+#config.dir=/Users/Aberic/Documents/tmp
+config:
+  dir: /Users/sagay/sword/fabric/data/config
+
+#key.dir=/Users/Aberic/Documents/tmp/key
+key:
+  dir: /Users/sagay/sword/fabric/data/key
+
+
+
+
+
 #app
 server:
-    port: 8080
+    port: 8081
 
 
 #spring

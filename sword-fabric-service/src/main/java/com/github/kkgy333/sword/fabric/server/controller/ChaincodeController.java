@@ -53,7 +53,7 @@ public class ChaincodeController {
     @PostMapping(value = "submit")
     public ModelAndView submit(@ModelAttribute Chaincode chaincode,
                                @ModelAttribute Api api,
-                               @RequestParam("init") boolean init,
+                               @RequestParam(value ="init",required = false) boolean init,
                                @RequestParam("intent") String intent,
                                @RequestParam(value = "sourceFile", required = false) MultipartFile sourceFile,
                                @RequestParam("id") int id) {
