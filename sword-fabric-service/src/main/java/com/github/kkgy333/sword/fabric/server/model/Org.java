@@ -1,5 +1,9 @@
 package com.github.kkgy333.sword.fabric.server.model;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -11,8 +15,10 @@ import lombok.ToString;
 @Setter
 @Getter
 @ToString
+@TableName("org")
 public class Org {
-
+    private static final long serialVersionUID = 1L;
+    @TableId(value="id", type= IdType.AUTO)
     private int id; // required
     private String name; // required
     private boolean tls; // required
@@ -22,8 +28,11 @@ public class Org {
     private String domainName; // required
     private String ordererDomainName; // required
     private int leagueId; // required
+    @TableField(exist=false)
     private String leagueName; // required
     private String date; // required
+    @TableField(exist=false)
     private int peerCount; // required
+    @TableField(exist=false)
     private int ordererCount; // required
 }

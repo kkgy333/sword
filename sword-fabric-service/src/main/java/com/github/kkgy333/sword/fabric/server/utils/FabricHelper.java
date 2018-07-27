@@ -1,5 +1,7 @@
 package com.github.kkgy333.sword.fabric.server.utils;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.kkgy333.sword.fabric.sdk.FabricManager;
 import com.github.kkgy333.sword.fabric.sdk.OrgManager;
 import com.github.kkgy333.sword.fabric.server.mapper.*;
@@ -83,12 +85,25 @@ public class FabricHelper {
 //                log.debug(String.format("chaincode = %s", chaincode.toString()));
                 Channel channel = channelMapper.get(chaincode.getChannelId());
 //                log.debug(String.format("channel = %s", channel.toString()));
-                Peer peer = peerMapper.get(channel.getPeerId());
+
+
+                Wrapper<Peer> queryWrapper = new QueryWrapper<Peer>();
+                ((QueryWrapper<Peer>) queryWrapper).eq("id",channel.getPeerId());
+                Peer peer = peerMapper.selectOne(queryWrapper);
 //                log.debug(String.format("peer = %s", peer.toString()));
                 int orgId = peer.getOrgId();
-                List<Peer> peers = peerMapper.list(orgId);
-                List<Orderer> orderers = ordererMapper.list(orgId);
-                Org org = orgMapper.get(orgId);
+
+                Wrapper<Peer> qwPeer = new QueryWrapper<Peer>();
+                ((QueryWrapper<Peer>) qwPeer).eq("org_id",orgId);
+                List<Peer> peers = peerMapper.selectList(qwPeer);
+
+                Wrapper<Orderer> qwOrderer = new QueryWrapper<Orderer>();
+                ((QueryWrapper<Orderer>) qwOrderer).eq("org_id",orgId);
+                List<Orderer> orderers = ordererMapper.selectList(qwOrderer);
+
+                Wrapper<Org> qwOrg = new QueryWrapper<Org>();
+                ((QueryWrapper<Org>) qwOrg).eq("id",orgId);
+                Org org =  orgMapper.selectOne(qwOrg);
 //                log.debug(String.format("org = %s", org.toString()));
                 if (orderers.size() != 0 && peers.size() != 0) {
                     fabricManager = createFabricManager(org, channel, chaincode, orderers, peers);

@@ -1,6 +1,9 @@
 package com.github.kkgy333.sword.fabric.server.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.kkgy333.sword.fabric.server.mapper.UserMapper;
+import com.github.kkgy333.sword.fabric.server.model.League;
 import com.github.kkgy333.sword.fabric.server.model.User;
 import com.github.kkgy333.sword.fabric.server.service.UserService;
 import org.apache.commons.lang3.StringUtils;
@@ -34,22 +37,26 @@ public class UserServiceImpl implements UserService {
         if (StringUtils.isEmpty(user.getUsername()) || StringUtils.isEmpty(user.getPassword())) {
             return 0;
         }
-        return userMapper.add(user);
+        return userMapper.insert(user);
     }
 
     @Override
     public int update(User user) {
-        return userMapper.update(user);
+        return userMapper.updateById(user);
     }
 
     @Override
     public List<User> listAll() {
-        return userMapper.listAll();
+        return userMapper.selectList(null);
     }
 
     @Override
     public User get(String username) {
-        return userMapper.get(username);
+
+        Wrapper<User> queryWrapper = new QueryWrapper<User>();
+        ((QueryWrapper<User>) queryWrapper).eq("username",username);
+        User user = userMapper.selectOne(queryWrapper);
+        return user;
     }
 
 }

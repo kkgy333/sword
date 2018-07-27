@@ -1,7 +1,11 @@
 package com.github.kkgy333.sword.fabric.server.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.kkgy333.sword.fabric.server.mapper.*;
+import com.github.kkgy333.sword.fabric.server.model.League;
 import com.github.kkgy333.sword.fabric.server.model.Org;
+import com.github.kkgy333.sword.fabric.server.model.Peer;
 import com.github.kkgy333.sword.fabric.server.service.OrgService;
 import com.github.kkgy333.sword.fabric.server.utils.DateUtil;
 import com.github.kkgy333.sword.fabric.server.utils.DeleteUtil;
@@ -58,7 +62,7 @@ public class OrgServiceImpl implements OrgService {
         String parentPath = String.format("%s%s%s%s%s",
                 env.getProperty("config.dir"),
                 File.separator,
-                leagueMapper.get(org.getLeagueId()).getName(),
+                getLeagueById(org.getLeagueId()).getName(),
                 File.separator,
                 org.getName());
         String childrenPath = parentPath + File.separator + Objects.requireNonNull(file.getOriginalFilename()).split("\\.")[0];
@@ -69,7 +73,7 @@ public class OrgServiceImpl implements OrgService {
             e.printStackTrace();
             return 0;
         }
-        return orgMapper.add(org);
+        return orgMapper.insert(org);
     }
 
     @Override
@@ -78,7 +82,7 @@ public class OrgServiceImpl implements OrgService {
             String parentPath = String.format("%s%s%s%s%s",
                     env.getProperty("config.dir"),
                     File.separator,
-                    leagueMapper.get(org.getLeagueId()).getName(),
+                    getLeagueById(org.getLeagueId()).getName(),
                     File.separator,
                     org.getName());
             String childrenPath = parentPath + File.separator + Objects.requireNonNull(file.getOriginalFilename()).split("\\.")[0];
@@ -90,38 +94,60 @@ public class OrgServiceImpl implements OrgService {
                 return 0;
             }
         }
-        FabricHelper.obtain().removeManager(peerMapper.list(org.getId()), channelMapper, chaincodeMapper);
-        return orgMapper.update(org);
+        Wrapper<Peer> queryWrapper = new QueryWrapper<Peer>();
+        ((QueryWrapper<Peer>) queryWrapper).eq("org_id",org.getId());
+
+        FabricHelper.obtain().removeManager(peerMapper.selectList(queryWrapper), channelMapper, chaincodeMapper);
+        return orgMapper.updateById(org);
     }
 
     @Override
     public List<Org> listAll() {
-        return orgMapper.listAll();
+        return orgMapper.selectList(null);
     }
 
     @Override
     public List<Org> listById(int id) {
-        return orgMapper.list(id);
+
+        Wrapper<Org> queryWrapper = new QueryWrapper<Org>();
+        ((QueryWrapper<Org>) queryWrapper).eq("league_id",id);
+        return orgMapper.selectList(queryWrapper);
     }
 
     @Override
     public Org get(int id) {
-        return orgMapper.get(id);
+
+        Wrapper<Org> queryWrapper = new QueryWrapper<Org>();
+        ((QueryWrapper<Org>) queryWrapper).eq("id",id);
+        return orgMapper.selectOne(queryWrapper);
+
     }
 
     @Override
     public int countById(int id) {
-        return orgMapper.count(id);
+
+        Wrapper<Org> queryWrapper = new QueryWrapper<Org>();
+        ((QueryWrapper<Org>) queryWrapper).eq("league_id",id);
+        return orgMapper.selectCount(queryWrapper);
     }
 
     @Override
     public int count() {
-        return orgMapper.countAll();
+        return orgMapper.selectCount(null);
+
     }
 
     @Override
     public int delete(int id) {
         return DeleteUtil.obtain().deleteOrg(id, orgMapper, ordererMapper, peerMapper, channelMapper, chaincodeMapper, appMapper);
+    }
+
+
+    public League getLeagueById(int id) {
+        Wrapper<League> ew = new QueryWrapper<League>();
+        ((QueryWrapper<League>) ew).eq("id",id);
+        League league = leagueMapper.selectOne(ew);
+        return league;
     }
 
 }

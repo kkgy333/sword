@@ -1,10 +1,14 @@
 package com.github.kkgy333.sword.fabric.server.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.kkgy333.sword.fabric.server.mapper.ChaincodeMapper;
 import com.github.kkgy333.sword.fabric.server.mapper.ChannelMapper;
 import com.github.kkgy333.sword.fabric.server.mapper.OrdererMapper;
 import com.github.kkgy333.sword.fabric.server.mapper.PeerMapper;
 import com.github.kkgy333.sword.fabric.server.model.Orderer;
+import com.github.kkgy333.sword.fabric.server.model.Org;
+import com.github.kkgy333.sword.fabric.server.model.Peer;
 import com.github.kkgy333.sword.fabric.server.service.OrdererService;
 import com.github.kkgy333.sword.fabric.server.utils.DateUtil;
 import com.github.kkgy333.sword.fabric.server.utils.FabricHelper;
@@ -37,42 +41,53 @@ public class OrdererServiceImpl implements OrdererService {
             return 0;
         }
         orderer.setDate(DateUtil.getCurrent("yyyy年MM月dd日"));
-        return ordererMapper.add(orderer);
+        return ordererMapper.insert(orderer);
     }
 
     @Override
     public int update(Orderer orderer) {
-        FabricHelper.obtain().removeManager(peerMapper.list(orderer.getOrgId()), channelMapper, chaincodeMapper);
-        return ordererMapper.update(orderer);
+        Wrapper<Peer> queryWrapper = new QueryWrapper<Peer>();
+        ((QueryWrapper<Peer>) queryWrapper).eq("org_id",orderer.getOrgId());
+        FabricHelper.obtain().removeManager(peerMapper.selectList(queryWrapper), channelMapper, chaincodeMapper);
+        return ordererMapper.updateById(orderer);
     }
 
     @Override
     public List<Orderer> listAll() {
-        return ordererMapper.listAll();
+        return ordererMapper.selectList(null);
     }
 
     @Override
     public List<Orderer> listById(int id) {
-        return ordererMapper.list(id);
+        Wrapper<Orderer> queryWrapper = new QueryWrapper<Orderer>();
+        ((QueryWrapper<Orderer>) queryWrapper).eq("org_id",id);
+        return ordererMapper.selectList(queryWrapper);
     }
 
     @Override
     public Orderer get(int id) {
-        return ordererMapper.get(id);
+
+        Wrapper<Orderer> queryWrapper = new QueryWrapper<Orderer>();
+        ((QueryWrapper<Orderer>) queryWrapper).eq("id",id);
+        return ordererMapper.selectOne(queryWrapper);
+
     }
 
     @Override
     public int countById(int id) {
-        return ordererMapper.count(id);
+
+        Wrapper<Orderer> queryWrapper = new QueryWrapper<Orderer>();
+        ((QueryWrapper<Orderer>) queryWrapper).eq("org_id",id);
+        return ordererMapper.selectCount(queryWrapper);
     }
 
     @Override
     public int count() {
-        return ordererMapper.countAll();
+        return ordererMapper.selectCount(null);
     }
 
     @Override
     public int delete(int id) {
-        return ordererMapper.delete(id);
+        return ordererMapper.deleteById(id);
     }
 }

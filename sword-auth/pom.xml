@@ -18,7 +18,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.7</maven.compiler.source>
         <maven.compiler.target>1.7</maven.compiler.target>
-        <mybatis-plus-boot-starter.version>3.0-alpha</mybatis-plus-boot-starter.version>
+        <mybatis-plus-boot-starter.version>3.0-gamma</mybatis-plus-boot-starter.version>
         <HikariCP.version>3.2.0</HikariCP.version>
     </properties>
 

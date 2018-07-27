@@ -1,7 +1,11 @@
 package com.github.kkgy333.sword.fabric.server.service.impl;
 
+
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.kkgy333.sword.fabric.server.mapper.*;
 import com.github.kkgy333.sword.fabric.server.model.League;
+import com.github.kkgy333.sword.fabric.server.model.User;
 import com.github.kkgy333.sword.fabric.server.service.LeagueService;
 import com.github.kkgy333.sword.fabric.server.utils.DateUtil;
 import com.github.kkgy333.sword.fabric.server.utils.DeleteUtil;
@@ -39,22 +43,25 @@ public class LeagueServiceImpl implements LeagueService {
             return 0;
         }
         leagueInfo.setDate(DateUtil.getCurrent("yyyy年MM月dd日"));
-        return leagueMapper.add(leagueInfo);
+        return leagueMapper.insert(leagueInfo);
     }
 
     @Override
     public int update(League leagueInfo) {
-        return leagueMapper.update(leagueInfo);
+        return leagueMapper.updateById(leagueInfo);
     }
 
     @Override
     public List<League> listAll() {
-        return leagueMapper.listAll();
+        return leagueMapper.selectList(null);
     }
 
     @Override
     public League get(int id) {
-        return leagueMapper.get(id);
+        Wrapper<League> ew = new QueryWrapper<League>();
+        ((QueryWrapper<League>) ew).eq("id",id);
+        League league = leagueMapper.selectOne(ew);
+        return league;
     }
 
     @Override

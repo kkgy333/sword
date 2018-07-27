@@ -15,7 +15,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
-        <mybatis-plus-boot-starter.version>3.0-alpha</mybatis-plus-boot-starter.version>
+        <mybatis-plus-boot-starter.version>3.0-gamma</mybatis-plus-boot-starter.version>
         <HikariCP.version>3.2.0</HikariCP.version>
     </properties>
 
@@ -74,11 +74,6 @@
             <version>21.0</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.7</version>
-        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -90,6 +85,7 @@
             <artifactId>sword-fabric-sdk</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+
     </dependencies>
 
     <build>

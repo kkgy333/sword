@@ -1,10 +1,9 @@
 package com.github.kkgy333.sword.fabric.server.utils;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.kkgy333.sword.fabric.server.mapper.*;
-import com.github.kkgy333.sword.fabric.server.model.Chaincode;
-import com.github.kkgy333.sword.fabric.server.model.Channel;
-import com.github.kkgy333.sword.fabric.server.model.Org;
-import com.github.kkgy333.sword.fabric.server.model.Peer;
+import com.github.kkgy333.sword.fabric.server.model.*;
 
 import java.util.List;
 
@@ -30,28 +29,37 @@ public class DeleteUtil {
     public int deleteLeague(int leagueId, LeagueMapper leagueMapper, OrgMapper orgMapper,
                             OrdererMapper ordererMapper, PeerMapper peerMapper,
                             ChannelMapper channelMapper, ChaincodeMapper chaincodeMapper, AppMapper appMapper) {
-        List<Org> orgs = orgMapper.list(leagueId);
+        Wrapper<Org> queryWrapper = new QueryWrapper<Org>();
+        ((QueryWrapper<Org>) queryWrapper).eq("league_id",leagueId);
+        List<Org> orgs =  orgMapper.selectList(queryWrapper);
         for (Org org : orgs) {
             if (deleteOrg(org.getId(), orgMapper, ordererMapper, peerMapper, channelMapper, chaincodeMapper, appMapper) <= 0) {
                 return 0;
             }
         }
-        return leagueMapper.delete(leagueId);
+        return leagueMapper.deleteById(leagueId);
     }
 
     public int deleteOrg(int orgId, OrgMapper orgMapper, OrdererMapper ordererMapper,
                          PeerMapper peerMapper, ChannelMapper channelMapper,
                          ChaincodeMapper chaincodeMapper, AppMapper appMapper) {
-        List<Peer> peers = peerMapper.list(orgId);
+
+        Wrapper<Peer> qwPeer = new QueryWrapper<Peer>();
+        ((QueryWrapper<Peer>) qwPeer).eq("org_id",orgId);
+        List<Peer> peers = peerMapper.selectList(qwPeer);
         for (Peer peer : peers) {
             if (deletePeer(peer.getId(), peerMapper, channelMapper, chaincodeMapper, appMapper) <= 0) {
                 return 0;
             }
         }
-        if (ordererMapper.deleteAll(orgId) <= 0) {
+
+        Wrapper<Orderer> qwOrderer = new QueryWrapper<Orderer>();
+        ((QueryWrapper<Orderer>) qwOrderer).eq("org_id",orgId);
+
+        if (ordererMapper.delete(qwOrderer) <= 0) {
             return 0;
         }
-        return orgMapper.delete(orgId);
+        return orgMapper.deleteById(orgId);
     }
 
     public int deletePeer(int peerId, PeerMapper peerMapper, ChannelMapper channelMapper,
@@ -62,7 +70,7 @@ public class DeleteUtil {
                 return 0;
             }
         }
-        return peerMapper.delete(peerId);
+        return peerMapper.deleteById(peerId);
     }
 
     public int deleteChannel(int channelId, ChannelMapper channelMapper, ChaincodeMapper chaincodeMapper, AppMapper appMapper) {

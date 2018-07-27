@@ -1,9 +1,12 @@
 package com.github.kkgy333.sword.fabric.server.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.kkgy333.sword.fabric.server.mapper.AppMapper;
 import com.github.kkgy333.sword.fabric.server.mapper.ChaincodeMapper;
 import com.github.kkgy333.sword.fabric.server.mapper.ChannelMapper;
 import com.github.kkgy333.sword.fabric.server.mapper.PeerMapper;
+import com.github.kkgy333.sword.fabric.server.model.Orderer;
 import com.github.kkgy333.sword.fabric.server.model.Peer;
 import com.github.kkgy333.sword.fabric.server.service.PeerService;
 import com.github.kkgy333.sword.fabric.server.utils.DateUtil;
@@ -42,38 +45,44 @@ public class PeerServiceImpl implements PeerService {
             return 0;
         }
         peer.setDate(DateUtil.getCurrent("yyyy年MM月dd日"));
-        return peerMapper.add(peer);
+        return peerMapper.insert(peer);
     }
 
     @Override
     public int update(Peer peer) {
-        FabricHelper.obtain().removeManager(peerMapper.list(peer.getOrgId()), channelMapper, chaincodeMapper);
-        return peerMapper.update(peer);
+        FabricHelper.obtain().removeManager(listById(peer.getOrgId()), channelMapper, chaincodeMapper);
+        return peerMapper.updateById(peer);
     }
 
     @Override
     public List<Peer> listAll() {
-        return peerMapper.listAll();
+        return peerMapper.selectList(null);
     }
 
     @Override
     public List<Peer> listById(int id) {
-        return peerMapper.list(id);
+        Wrapper<Peer> queryWrapper = new QueryWrapper<Peer>();
+        ((QueryWrapper<Peer>) queryWrapper).eq("org_id",id);
+        return peerMapper.selectList(queryWrapper);
     }
 
     @Override
     public Peer get(int id) {
-        return peerMapper.get(id);
+        Wrapper<Peer> queryWrapper = new QueryWrapper<Peer>();
+        ((QueryWrapper<Peer>) queryWrapper).eq("id",id);
+        return peerMapper.selectOne(queryWrapper);
     }
 
     @Override
     public int countById(int id) {
-        return peerMapper.count(id);
+        Wrapper<Peer> queryWrapper = new QueryWrapper<Peer>();
+        ((QueryWrapper<Peer>) queryWrapper).eq("org_id",id);
+        return peerMapper.selectCount(queryWrapper);
     }
 
     @Override
     public int count() {
-        return peerMapper.countAll();
+        return peerMapper.selectCount(null);
     }
 
     @Override

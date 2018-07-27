@@ -19,7 +19,7 @@ key:
 
 
 
-
+MYSQL_HOST: 182.92.102.51
 
 #app
 server:
@@ -66,7 +66,7 @@ spring:
 mybatis-plus:
   mapper-locations: classpath:/mapper/*Mapper.xml
   #实体扫描，多个package用逗号或者分号分隔
-  typeAliasesPackage: com.github.kkgy333.sword.auth.model
+  typeAliasesPackage: com.github.kkgy333.sword.fabric.server.model
   #typeEnumsPackage: com.baomidou.springboot.entity.enums
   global-config:
     #刷新mapper 调试神器
@@ -94,3 +94,15 @@ mybatis-plus:
 ##logging
 #logging:
 #  level: warn
+
+
+logging:
+  level:
+    com:
+      looedu:
+        mapper: debug
+
+
+
+
+
