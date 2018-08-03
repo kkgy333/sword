@@ -77,9 +77,9 @@ public class FabricJavaTest {
             peerProperties.setProperty("negotiationType" ,  "TLS");
             peerProperties.setProperty("grpc.NettyChannelBuilderOption.maxInboundMessageSize" ,  "9000000");
             peerProperties.setProperty("sslProvider" ,  "openSSL");
-            peerProperties.setProperty("clientCertFile" ,  "/Volumes/Work/MY_Project/区块链/sdk/fabric-sdk-java/src/test/fixture/sdkintegration/e2e-2Orgs/v1.2/crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com/tls/client.crt");
+            //peerProperties.setProperty("clientCertFile" ,  "/Volumes/Work/MY_Project/区块链/sdk/fabric-sdk-java/src/test/fixture/sdkintegration/e2e-2Orgs/v1.2/crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com/tls/client.crt");
             peerProperties.setProperty("hostnameOverride" ,  "peer0.org1.example.com");
-            peerProperties.setProperty("clientKeyFile" ,  "/Volumes/Work/MY_Project/区块链/sdk/fabric-sdk-java/src/test/fixture/sdkintegration/e2e-2Orgs/v1.2/crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com/tls/client.key");
+            //peerProperties.setProperty("clientKeyFile" ,  "/Volumes/Work/MY_Project/区块链/sdk/fabric-sdk-java/src/test/fixture/sdkintegration/e2e-2Orgs/v1.2/crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com/tls/client.key");
 
 
             //创建Peer服务器节点的客户端代理并加入到通道中
