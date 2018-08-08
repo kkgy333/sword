@@ -19,4 +19,6 @@ public interface TraceService {
     String queryBlockByNumberForIndex(Trace trace);
 
     String queryBlockChainInfoForIndex(int id);
+
+    String test();
 }

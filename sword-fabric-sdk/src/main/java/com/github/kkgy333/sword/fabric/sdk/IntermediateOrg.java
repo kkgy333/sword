@@ -22,7 +22,7 @@ import java.util.Map;
  *
  * @author : Aberic 【2018/5/4 15:32】
  */
-class IntermediateOrg {
+public class IntermediateOrg {
 
     private Logger log = LogManager.getLogger(IntermediateOrg.class);
 
@@ -200,7 +200,7 @@ class IntermediateOrg {
         log.debug("Set Crypto Suite of HFClient");
     }
 
-    HFClient getClient() {
+    public HFClient getClient() {
         return client;
     }
 

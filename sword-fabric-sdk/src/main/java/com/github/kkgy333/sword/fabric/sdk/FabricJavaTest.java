@@ -46,6 +46,12 @@ public class FabricJavaTest {
     public static void main(String[] args) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException, IOException {
 
 
+
+
+
+
+
+
         try {
 
             //创建客户端代理
@@ -101,7 +107,7 @@ public class FabricJavaTest {
 			System.out.println(blockhashstr);*/
 
 
-            BlockInfo blockinfo= channel.queryBlockByNumber(2);
+            BlockInfo blockinfo= channel.queryBlockByNumber(0);
             ByteString blockhash = blockinfo.getBlock().getHeader().getPreviousHash();
             String blockhashstr = Hex.encodeHexString(blockinfo.getPreviousHash());
             System.out.println(" 最后区块hash :  "+blockhashstr);

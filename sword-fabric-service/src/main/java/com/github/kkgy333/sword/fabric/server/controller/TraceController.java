@@ -18,17 +18,17 @@ public class TraceController {
     @Resource
     private TraceService traceService;
 
-    @PostMapping(value = "txid")
+    @GetMapping(value = "txid")
     public String queryBlockByTransactionID(@RequestBody Trace trace) {
         return traceService.queryBlockByTransactionID(trace);
     }
 
-    @PostMapping(value = "hash")
+    @GetMapping(value = "hash")
     public String queryBlockByHash(@RequestBody Trace trace) {
         return traceService.queryBlockByHash(trace);
     }
 
-    @PostMapping(value = "number")
+    @GetMapping(value = "number")
     public String queryBlockByNumber(@RequestBody Trace trace) {
         return traceService.queryBlockByNumber(trace);
     }
@@ -36,6 +36,13 @@ public class TraceController {
     @GetMapping(value = "info/{id}/{key}")
     public String queryBlockChainInfo(@PathVariable("id") int id, @PathVariable("key") String key) {
         return traceService.queryBlockChainInfo(id, key);
+    }
+
+
+
+    @GetMapping(value = "test")
+    public String test() {
+        return traceService.test();
     }
 
 }

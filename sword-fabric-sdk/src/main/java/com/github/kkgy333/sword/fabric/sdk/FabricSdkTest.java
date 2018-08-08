@@ -102,12 +102,12 @@ public class FabricSdkTest {
 
     public void enrollUsersSetup(SampleStore sampleStore) throws Exception {
         ////////////////////////////
-        //Set up USERS
+        //设置用户
 
         //SampleUser can be any implementation that implements org.hyperledger.fabric.sdk.User Interface
 
         ////////////////////////////
-        // get users for all orgs
+        // 从所有组织中获取用户
 
         for (SampleOrg sampleOrg : testSampleOrgs) {
 
@@ -118,8 +118,8 @@ public class FabricSdkTest {
             ca.setCryptoSuite(CryptoSuite.Factory.getCryptoSuite());
 
             if (testConfig.isRunningFabricTLS()) {
-                //This shows how to get a client TLS certificate from Fabric CA
-                // we will use one client TLS certificate for orderer peers etc.
+                //这展示了如何从Fabric CA获得客户端TLS证书
+                // 我们将使用一个客户端TLS证书给 orderer peers etc.
                 final EnrollmentRequest enrollmentRequestTLS = new EnrollmentRequest();
                 enrollmentRequestTLS.addHost("localhost");
                 enrollmentRequestTLS.setProfile("tls");
@@ -132,12 +132,12 @@ public class FabricSdkTest {
                 tlsProperties.put("clientKeyBytes", tlsKeyPEM.getBytes(UTF_8));
                 tlsProperties.put("clientCertBytes", tlsCertPEM.getBytes(UTF_8));
                 clientTLSProperties.put(sampleOrg.getName(), tlsProperties);
-                //Save in samplestore for follow on tests.
+                //在samplestore中保存，以便在测试中跟踪。
                 sampleStore.storeClientPEMTLCertificate(sampleOrg, tlsCertPEM);
                 sampleStore.storeClientPEMTLSKey(sampleOrg, tlsKeyPEM);
             }
 
-            HFCAInfo info = ca.info(); //just check if we connect at all.
+            HFCAInfo info = ca.info(); //看看我们是否连上了。
             System.out.println(info);
             String infoName = info.getCAName();
             if (infoName != null && !infoName.isEmpty()) {
@@ -152,16 +152,16 @@ public class FabricSdkTest {
 
             sampleOrg.setAdmin(admin); // The admin of this org --
 
-            SampleUser user = sampleStore.getMember(TESTUSER_1_NAME, sampleOrg.getName());
-            if (!user.isRegistered()) {  // users need to be registered AND enrolled
-                RegistrationRequest rr = new RegistrationRequest(user.getName(), "org1.department1");
-                user.setEnrollmentSecret(ca.register(rr, admin));
-            }
-            if (!user.isEnrolled()) {
-                user.setEnrollment(ca.enroll(user.getName(), user.getEnrollmentSecret()));
-                user.setMspId(mspid);
-            }
-            sampleOrg.addUser(user); //Remember user belongs to this Org
+//            SampleUser user = sampleStore.getMember(TESTUSER_1_NAME, sampleOrg.getName());
+//            if (!user.isRegistered()) {  // users need to be registered AND enrolled
+//                RegistrationRequest rr = new RegistrationRequest(user.getName(), "org1.department1");
+//                user.setEnrollmentSecret(ca.register(rr, admin));
+//            }
+//            if (!user.isEnrolled()) {
+//                user.setEnrollment(ca.enroll(user.getName(), user.getEnrollmentSecret()));
+//                user.setMspId(mspid);
+//            }
+//            sampleOrg.addUser(user); //Remember user belongs to this Org
 
             final String sampleOrgName = sampleOrg.getName();
             final String sampleOrgDomainName = sampleOrg.getDomainName();
@@ -196,7 +196,7 @@ public class FabricSdkTest {
         SampleOrg sampleOrg = testConfig.getIntegrationTestsSampleOrg("peerOrg1");
         Channel fooChannel = constructChannel(FOO_CHANNEL_NAME, client, sampleOrg);
         //sampleStore.saveChannel(fooChannel);
-        runChannel(client, fooChannel, true, sampleOrg, 0);
+        //runChannel(client, fooChannel, true, sampleOrg, 0);
 
 
 
@@ -265,6 +265,8 @@ public class FabricSdkTest {
 
         ChannelConfiguration channelConfiguration = new ChannelConfiguration(new File(TEST_FIXTURES_PATH + "/sdkintegration/e2e-2Orgs/" + TestConfig.FAB_CONFIG_GEN_VERS + "/" + name + ".tx"));
 
+
+
         //Create channel that has only one signer that is this orgs peer admin. If channel creation policy needed more signature they would need to be added too.
         Channel newChannel = client.newChannel(name, anOrderer, channelConfiguration, client.getChannelConfigurationSignature(channelConfiguration, sampleOrg.getPeerAdmin()));
 
@@ -323,11 +325,11 @@ public class FabricSdkTest {
 
         newChannel.initialize();
 
-//        for(Peer p: peers) {
-//
-//            BlockchainInfo blockchianinfo = newChannel.queryBlockchainInfo(p);
-//            System.out.println(p.getName()+" 区块高度 :  " + blockchianinfo.getHeight() + " ");
-//        }
+        for(Peer p: peers) {
+
+            BlockchainInfo blockchianinfo = newChannel.queryBlockchainInfo(p);
+            System.out.println(p.getName()+" 区块高度 :  " + blockchianinfo.getHeight() + " ");
+        }
 
         System.out.println(String.format("Finished initialization channel %s", name));
 

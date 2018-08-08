@@ -9,6 +9,7 @@ import com.github.kkgy333.sword.fabric.server.service.TraceService;
 import com.github.kkgy333.sword.fabric.server.utils.FabricHelper;
 import com.github.kkgy333.sword.fabric.server.utils.VerifyUtil;
 import org.apache.commons.codec.binary.Hex;
+import org.hyperledger.fabric.sdk.HFClient;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -104,5 +105,20 @@ public class TraceServiceImpl implements TraceService, BaseService {
             e.printStackTrace();
             return responseFail(String.format("Request failed： %s", e.getMessage()));
         }
+    }
+
+
+    public String test(){
+        try {
+            FabricManager manager = FabricHelper.obtain().get(orgMapper, channelMapper, chaincodeMapper, ordererMapper, peerMapper,
+                    0);
+
+            HFClient client =manager.getOrg().getClient();
+
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return "";
     }
 }

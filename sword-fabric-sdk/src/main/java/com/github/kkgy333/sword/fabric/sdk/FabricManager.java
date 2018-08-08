@@ -18,6 +18,9 @@ import java.util.concurrent.TimeoutException;
 public class FabricManager {
 
     private IntermediateOrg org;
+    public IntermediateOrg getOrg(){
+        return org;
+    }
 
     FabricManager(IntermediateOrg org) {
         this.org = org;
