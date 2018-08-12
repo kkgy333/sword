@@ -1,27 +1,28 @@
 package com.github.kkgy333.sword.fabric.sdk;
 
-
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hyperledger.fabric.protos.ledger.rwset.kvrwset.KvRwset;
 import org.hyperledger.fabric.sdk.*;
+import org.hyperledger.fabric.sdk.BlockInfo.EnvelopeInfo;
+import org.hyperledger.fabric.sdk.BlockInfo.EnvelopeType;
+import org.hyperledger.fabric.sdk.BlockInfo.TransactionEnvelopeInfo;
 import org.hyperledger.fabric.sdk.exception.InvalidArgumentException;
 import org.hyperledger.fabric.sdk.exception.ProposalException;
 import org.hyperledger.fabric.sdk.exception.TransactionException;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.nio.file.Paths;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 /**
  * 描述：中继频道对象
@@ -48,21 +49,22 @@ class IntermediateChannel {
     }
 
     private void setChannel(HFClient client) throws InvalidArgumentException, TransactionException {
-//        client.setUserContext(org.getUser(org.getUsername()));
-        client.setUserContext(org.getUser());
+        client.setUserContext(org.getUser(org.getUsername()));
+        // client.setUserContext(org.getUser());
         channel = client.newChannel(channelName);
         log.debug("Get Chain " + channelName);
 
         int sizeOrderers = org.getOrderers().size();
         for (int i = 0; i < sizeOrderers; i++) {
-            File ordererCert = Paths.get(org.getCryptoConfigPath(), "/ordererOrganizations", org.getOrdererDomainName(), "orderers", org.getOrderers().get(i).getOrdererName(),
-                    "tls/server.crt").toFile();
-            if (!ordererCert.exists()) {
-                throw new RuntimeException(
-                        String.format("Missing cert file for: %s. Could not find at location: %s", org.getOrderers().get(i).getOrdererName(), ordererCert.getAbsolutePath()));
-            }
             Properties ordererProperties = new Properties();
-            ordererProperties.setProperty("pemFile", ordererCert.getAbsolutePath());
+            if (org.openTLS()) {
+                File ordererCert = new File(org.getOrderers().get(i).getServerCrtPath());
+                if (!ordererCert.exists()) {
+                    throw new RuntimeException(
+                            String.format("Missing cert file for: %s. Could not find at location: %s", org.getOrderers().get(i).getOrdererName(), ordererCert.getAbsolutePath()));
+                }
+                ordererProperties.setProperty("pemFile", ordererCert.getAbsolutePath());
+            }
             ordererProperties.setProperty("hostnameOverride", org.getOrderers().get(i).getOrdererName());
             ordererProperties.setProperty("sslProvider", "openSSL");
             ordererProperties.setProperty("negotiationType", "TLS");
@@ -77,13 +79,15 @@ class IntermediateChannel {
 
         int sizePeer = org.getPeers().size();
         for (int i = 0; i < sizePeer; i++) {
-            File peerCert = Paths.get(org.getCryptoConfigPath(), "/peerOrganizations", org.getOrgDomainName(), "peers", org.getPeers().get(i).getPeerName(), "tls/server.crt")
-                    .toFile();
-            if (!peerCert.exists()) {
-                throw new RuntimeException(String.format("Missing cert file for: %s. Could not find at location: %s", org.getPeers().get(i).getPeerName(), peerCert.getAbsolutePath()));
-            }
             Properties peerProperties = new Properties();
-            peerProperties.setProperty("pemFile", peerCert.getAbsolutePath());
+            if (org.openTLS()) {
+                File peerCert = new File(org.getPeers().get(i).getServerCrtPath());
+                if (!peerCert.exists()) {
+                    throw new RuntimeException(
+                            String.format("Missing cert file for: %s. Could not find at location: %s", org.getPeers().get(i).getPeerName(), peerCert.getAbsolutePath()));
+                }
+                peerProperties.setProperty("pemFile", peerCert.getAbsolutePath());
+            }
             // ret.setProperty("trustServerCertificate", "true"); //testing
             // environment only NOT FOR PRODUCTION!
             peerProperties.setProperty("hostnameOverride", org.getPeers().get(i).getPeerName());
@@ -94,8 +98,8 @@ class IntermediateChannel {
             // 如果未加入频道，该方法执行加入。如果已加入频道，则执行下一行方面新增Peer
             // channel.joinPeer(client.newPeer(peers.get().get(i).getPeerName(), fabricOrg.getPeerLocation(peers.get().get(i).getPeerName()), peerProperties));
             channel.addPeer(client.newPeer(org.getPeers().get(i).getPeerName(), org.getPeers().get(i).getPeerLocation(), peerProperties));
-            if (org.getPeers().get(i).isAddEventHub()) {
-                channel.addEventHub(client.newEventHub(org.getPeers().get(i).getPeerEventHubName(), org.getPeers().get(i).getPeerEventHubLocation(), peerProperties));
+            if (null != org.getPeers().get(i).getPeerEventHubLocation() && !org.getPeers().get(i).getPeerEventHubLocation().isEmpty()) {
+                channel.addEventHub(client.newEventHub(org.getPeers().get(i).getPeerName(), org.getPeers().get(i).getPeerEventHubLocation(), peerProperties));
             }
         }
 
@@ -114,6 +118,19 @@ class IntermediateChannel {
                 }
             });
         }
+        if (null != org.getChaincodeEventListener()) {
+            String[] eventNames = org.getEventNames().split(",");
+            for (String eventName : eventNames) {
+                channel.registerChaincodeEventListener(Pattern.compile(".*"), Pattern.compile(Pattern.quote(eventName)), (handle, blockEvent, chaincodeEvent) -> {
+                    try {
+                        org.getChaincodeEventListener().received(handle, execBlockInfo(blockEvent), chaincodeEvent.getEventName(), chaincodeEvent.getChaincodeId(), chaincodeEvent.getTxId());
+                    } catch (IOException | InvalidArgumentException e) {
+                        e.printStackTrace();
+                        org.getChaincodeEventListener().received(handle, getFailFromString(e.getMessage()), chaincodeEvent.getEventName(), chaincodeEvent.getChaincodeId(), chaincodeEvent.getTxId());
+                    }
+                });
+            }
+        }
     }
 
     /** 获取Fabric Channel */
@@ -130,14 +147,16 @@ class IntermediateChannel {
      *
      * @param peer 中继节点信息
      */
-    Map<String, String> joinPeer(IntermediatePeer peer) throws InvalidArgumentException, ProposalException {
-        File peerCert = Paths.get(org.getCryptoConfigPath(), "/peerOrganizations", org.getOrgDomainName(), "peers", peer.getPeerName(), "tls/server.crt")
-                .toFile();
-        if (!peerCert.exists()) {
-            throw new RuntimeException(String.format("Missing cert file for: %s. Could not find at location: %s", peer.getPeerName(), peerCert.getAbsolutePath()));
-        }
+    JSONObject joinPeer(IntermediatePeer peer) throws InvalidArgumentException, ProposalException {
         Properties peerProperties = new Properties();
-        peerProperties.setProperty("pemFile", peerCert.getAbsolutePath());
+        if (org.openTLS()) {
+            File peerCert = new File(org.getPeers().get(0).getServerCrtPath());
+            if (!peerCert.exists()) {
+                throw new RuntimeException(
+                        String.format("Missing cert file for: %s. Could not find at location: %s", peer.getPeerName(), peerCert.getAbsolutePath()));
+            }
+            peerProperties.setProperty("pemFile", peerCert.getAbsolutePath());
+        }
         // ret.setProperty("trustServerCertificate", "true"); //testing
         // environment only NOT FOR PRODUCTION!
         peerProperties.setProperty("hostnameOverride", peer.getPeerName());
@@ -154,33 +173,40 @@ class IntermediateChannel {
             }
         }
         channel.joinPeer(fabricPeer);
-        if (peer.isAddEventHub()) {
-            channel.addEventHub(org.getClient().newEventHub(peer.getPeerEventHubName(), peer.getPeerEventHubLocation(), peerProperties));
+        if (null != peer.getPeerEventHubLocation() && !peer.getPeerEventHubLocation().isEmpty()) {
+            channel.addEventHub(org.getClient().newEventHub(peer.getPeerName(), peer.getPeerEventHubLocation(), peerProperties));
         }
-        return getSuccessFromString("peer join channel success");
+        return getSuccessFromString();
     }
 
-    private Map<String, String> getSuccessFromString(String data) {
-        Map<String, String> resultMap = new HashMap<>();
-        resultMap.put("code", "success");
-        resultMap.put("data", data);
-        return resultMap;
+    private JSONObject getSuccess(JSON json) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("code", BlockListener.SUCCESS);
+        jsonObject.put("data", json);
+        return jsonObject;
     }
 
-    private Map<String, String> getFailFromString(String data) {
-        Map<String, String> resultMap = new HashMap<>();
-        resultMap.put("code", "error");
-        resultMap.put("data", data);
-        return resultMap;
+    private JSONObject getSuccessFromString() {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("code", BlockListener.SUCCESS);
+        jsonObject.put("data", JSON.parse("peer join channel success"));
+        return jsonObject;
+    }
+
+    private JSONObject getFailFromString(String data) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("code", BlockListener.ERROR);
+        jsonObject.put("data", data);
+        return jsonObject;
     }
 
     /** 查询当前频道的链信息，包括链长度、当前最新区块hash以及当前最新区块的上一区块hash */
-    Map<String, String> getBlockchainInfo() throws InvalidArgumentException, ProposalException {
+    JSONObject getBlockchainInfo() throws InvalidArgumentException, ProposalException {
         JSONObject blockchainInfo = new JSONObject();
         blockchainInfo.put("height", channel.queryBlockchainInfo().getHeight());
         blockchainInfo.put("currentBlockHash", Hex.encodeHexString(channel.queryBlockchainInfo().getCurrentBlockHash()));
         blockchainInfo.put("previousBlockHash", Hex.encodeHexString(channel.queryBlockchainInfo().getPreviousBlockHash()));
-        return getSuccessFromString(blockchainInfo.toString());
+        return getSuccess(blockchainInfo);
     }
 
     /**
@@ -188,7 +214,7 @@ class IntermediateChannel {
      *
      * @param txID transactionID
      */
-    Map<String, String> queryBlockByTransactionID(String txID) throws InvalidArgumentException, ProposalException, IOException {
+    JSONObject queryBlockByTransactionID(String txID) throws InvalidArgumentException, ProposalException, IOException {
         return execBlockInfo(channel.queryBlockByTransactionID(txID));
     }
 
@@ -197,7 +223,7 @@ class IntermediateChannel {
      *
      * @param blockHash hash
      */
-    Map<String, String> queryBlockByHash(byte[] blockHash) throws InvalidArgumentException, ProposalException, IOException {
+    JSONObject queryBlockByHash(byte[] blockHash) throws InvalidArgumentException, ProposalException, IOException {
         return execBlockInfo(channel.queryBlockByHash(blockHash));
     }
 
@@ -206,7 +232,7 @@ class IntermediateChannel {
      *
      * @param blockNumber 区块高度
      */
-    Map<String, String> queryBlockByNumber(long blockNumber) throws InvalidArgumentException, ProposalException, IOException {
+    JSONObject queryBlockByNumber(long blockNumber) throws InvalidArgumentException, ProposalException, IOException {
         return execBlockInfo(channel.queryBlockByNumber(blockNumber));
     }
 
@@ -215,7 +241,7 @@ class IntermediateChannel {
      *
      * @param blockInfo 区块信息对象
      */
-    private Map<String, String> execBlockInfo(BlockInfo blockInfo) throws IOException, InvalidArgumentException {
+    private JSONObject execBlockInfo(BlockInfo blockInfo) throws IOException, InvalidArgumentException {
         final long blockNumber = blockInfo.getBlockNumber();
         JSONObject blockJson = new JSONObject();
         blockJson.put("blockNumber", blockNumber);
@@ -230,8 +256,14 @@ class IntermediateChannel {
         log.debug("calculated block hash is " + Hex.encodeHexString(SDKUtils.calculateBlockHash(org.getClient(), blockNumber, blockInfo.getPreviousHash(), blockInfo.getDataHash())));
         log.debug("block number " + blockNumber + " has " + blockInfo.getEnvelopeCount() + " envelope count:");
 
+        blockJson.put("envelopes", getEnvelopeJsonArray(blockInfo, blockNumber));
+        return getSuccess(blockJson);
+    }
+
+    /** 解析区块包 */
+    private JSONArray getEnvelopeJsonArray(BlockInfo blockInfo, long blockNumber) throws UnsupportedEncodingException, InvalidProtocolBufferException {
         JSONArray envelopeJsonArray = new JSONArray();
-        for (BlockInfo.EnvelopeInfo info : blockInfo.getEnvelopeInfos()) {
+        for (EnvelopeInfo info : blockInfo.getEnvelopeInfos()) {
             JSONObject envelopeJson = new JSONObject();
             envelopeJson.put("channelId", info.getChannelId());
             envelopeJson.put("transactionID", info.getTransactionID());
@@ -253,8 +285,8 @@ class IntermediateChannel {
             log.debug("timestamp = " + Utils.parseDateFormat(new Date(info.getTimestamp().getTime())));
             log.debug("type = " + info.getType());
 
-            if (info.getType() == BlockInfo.EnvelopeType.TRANSACTION_ENVELOPE) {
-                BlockInfo.TransactionEnvelopeInfo txeInfo = (BlockInfo.TransactionEnvelopeInfo) info;
+            if (info.getType() == EnvelopeType.TRANSACTION_ENVELOPE) {
+                TransactionEnvelopeInfo txeInfo = (TransactionEnvelopeInfo) info;
                 JSONObject transactionEnvelopeInfoJson = new JSONObject();
                 int txCount = txeInfo.getTransactionActionInfoCount();
                 transactionEnvelopeInfoJson.put("txCount", txCount);
@@ -265,113 +297,141 @@ class IntermediateChannel {
                 log.debug("Transaction number " + blockNumber + " isValid = " + txeInfo.isValid());
                 log.debug("Transaction number " + blockNumber + " validation code = " + txeInfo.getValidationCode());
 
-                JSONArray transactionActionInfoJsonArray = new JSONArray();
-                for (int i = 0; i < txCount; i++) {
-                    BlockInfo.TransactionEnvelopeInfo.TransactionActionInfo txInfo = txeInfo.getTransactionActionInfo(i);
-                    int endorsementsCount = txInfo.getEndorsementsCount();
-                    int chaincodeInputArgsCount = txInfo.getChaincodeInputArgsCount();
-                    JSONObject transactionActionInfoJson = new JSONObject();
-                    transactionActionInfoJson.put("responseStatus", txInfo.getResponseStatus());
-                    transactionActionInfoJson.put("responseMessageString", printableString(new String(txInfo.getResponseMessageBytes(), "UTF-8")));
-                    transactionActionInfoJson.put("endorsementsCount", endorsementsCount);
-                    transactionActionInfoJson.put("chaincodeInputArgsCount", chaincodeInputArgsCount);
-                    transactionActionInfoJson.put("status", txInfo.getProposalResponseStatus());
-                    transactionActionInfoJson.put("payload", printableString(new String(txInfo.getProposalResponsePayload(), "UTF-8")));
-
-                    log.debug("Transaction action " + i + " has response status " + txInfo.getResponseStatus());
-                    log.debug("Transaction action " + i + " has response message bytes as string: " + printableString(new String(txInfo.getResponseMessageBytes(), "UTF-8")));
-                    log.debug("Transaction action " + i + " has endorsements " + endorsementsCount);
-
-                    JSONArray endorserInfoJsonArray = new JSONArray();
-                    for (int n = 0; n < endorsementsCount; ++n) {
-                        BlockInfo.EndorserInfo endorserInfo = txInfo.getEndorsementInfo(n);
-                        String signature = Hex.encodeHexString(endorserInfo.getSignature());
-                        String id = endorserInfo.getId();
-                        String mspId = endorserInfo.getMspid();
-                        JSONObject endorserInfoJson = new JSONObject();
-                        endorserInfoJson.put("signature", signature);
-                        endorserInfoJson.put("id", id);
-                        endorserInfoJson.put("mspId", mspId);
-
-                        log.debug("Endorser " + n + " signature: " + signature);
-                        log.debug("Endorser " + n + " id: " + id);
-                        log.debug("Endorser " + n + " mspId: " + mspId);
-                        endorserInfoJsonArray.put(endorserInfoJson);
-                    }
-                    transactionActionInfoJson.put("endorserInfoArray", endorserInfoJsonArray);
-
-                    log.debug("Transaction action " + i + " has " + chaincodeInputArgsCount + " chaincode input arguments");
-                    JSONArray argJsonArray = new JSONArray();
-                    for (int z = 0; z < chaincodeInputArgsCount; ++z) {
-                        argJsonArray.put(printableString(new String(txInfo.getChaincodeInputArgs(z), "UTF-8")));
-                        log.debug("Transaction action " + i + " has chaincode input argument " + z + "is: " + printableString(new String(txInfo.getChaincodeInputArgs(z), "UTF-8")));
-                    }
-                    transactionActionInfoJson.put("argArray", argJsonArray);
-
-                    log.debug("Transaction action " + i + " proposal response status: " + txInfo.getProposalResponseStatus());
-                    log.debug("Transaction action " + i + " proposal response payload: " + printableString(new String(txInfo.getProposalResponsePayload())));
-
-                    TxReadWriteSetInfo rwsetInfo = txInfo.getTxReadWriteSet();
-                    JSONObject rwsetInfoJson = new JSONObject();
-                    if (null != rwsetInfo) {
-                        int nsRWsetCount = rwsetInfo.getNsRwsetCount();
-                        rwsetInfoJson.put("nsRWsetCount", nsRWsetCount);
-                        log.debug("Transaction action " + i + " has " + nsRWsetCount + " name space read write sets");
-
-                        JSONArray nsRwsetInfoJsonArray = new JSONArray();
-                        for (TxReadWriteSetInfo.NsRwsetInfo nsRwsetInfo : rwsetInfo.getNsRwsetInfos()) {
-                            final String namespace = nsRwsetInfo.getNamespace();
-                            KvRwset.KVRWSet rws = nsRwsetInfo.getRwset();
-                            JSONObject nsRwsetInfoJson = new JSONObject();
-
-                            JSONArray readJsonArray = new JSONArray();
-                            int rs = -1;
-                            for (KvRwset.KVRead readList : rws.getReadsList()) {
-                                rs++;
-                                String key = readList.getKey();
-                                long readVersionBlockNum = readList.getVersion().getBlockNum();
-                                long readVersionTxNum = readList.getVersion().getTxNum();
-                                JSONObject readInfoJson = new JSONObject();
-                                readInfoJson.put("namespace", namespace);
-                                readInfoJson.put("readSetIndex", rs);
-                                readInfoJson.put("key", key);
-                                readInfoJson.put("readVersionBlockNum", readVersionBlockNum);
-                                readInfoJson.put("readVersionTxNum", readVersionTxNum);
-                                readInfoJson.put("chaincode_version", String.format("[%s : %s]", readVersionBlockNum, readVersionTxNum));
-                                readJsonArray.put(readInfoJson);
-                                log.debug("Namespace " + namespace + " read set " + rs + " key " + key + " version [" + readVersionBlockNum + " : " + readVersionTxNum + "]");
-                            }
-                            nsRwsetInfoJson.put("readSet", readJsonArray);
-
-                            JSONArray writeJsonArray = new JSONArray();
-                            rs = -1;
-                            for (KvRwset.KVWrite writeList : rws.getWritesList()) {
-                                rs++;
-                                String key = writeList.getKey();
-                                String valAsString = printableString(new String(writeList.getValue().toByteArray(), "UTF-8"));
-                                JSONObject writeInfoJson = new JSONObject();
-                                writeInfoJson.put("namespace", namespace);
-                                writeInfoJson.put("writeSetIndex", rs);
-                                writeInfoJson.put("key", key);
-                                writeInfoJson.put("value", valAsString);
-                                writeJsonArray.put(writeInfoJson);
-                                log.debug("Namespace " + namespace + " write set " + rs + " key " + key + " has value " + valAsString);
-                            }
-                            nsRwsetInfoJson.put("writeSet", writeJsonArray);
-                            nsRwsetInfoJsonArray.put(nsRwsetInfoJson);
-                        }
-                        rwsetInfoJson.put("nsRwsetInfoArray", nsRwsetInfoJsonArray);
-                    }
-                    transactionActionInfoJson.put("rwsetInfo", rwsetInfoJson);
-                    transactionActionInfoJsonArray.put(transactionActionInfoJson);
-                }
-                transactionEnvelopeInfoJson.put("transactionActionInfoArray", transactionActionInfoJsonArray);
+                transactionEnvelopeInfoJson.put("transactionActionInfoArray", getTransactionActionInfoJsonArray(txeInfo, txCount));
                 envelopeJson.put("transactionEnvelopeInfo", transactionEnvelopeInfoJson);
             }
-            envelopeJsonArray.put(envelopeJson);
+            envelopeJsonArray.add(envelopeJson);
         }
-        blockJson.put("envelopes", envelopeJsonArray);
-        return getSuccessFromString(blockJson.toString());
+        return envelopeJsonArray;
+    }
+
+    /** 解析交易请求集合 */
+    private JSONArray getTransactionActionInfoJsonArray(TransactionEnvelopeInfo txeInfo, int txCount) throws UnsupportedEncodingException, InvalidProtocolBufferException {
+        JSONArray transactionActionInfoJsonArray = new JSONArray();
+        for (int i = 0; i < txCount; i++) {
+            TransactionEnvelopeInfo.TransactionActionInfo txInfo = txeInfo.getTransactionActionInfo(i);
+            int endorsementsCount = txInfo.getEndorsementsCount();
+            int chaincodeInputArgsCount = txInfo.getChaincodeInputArgsCount();
+            JSONObject transactionActionInfoJson = new JSONObject();
+            transactionActionInfoJson.put("responseStatus", txInfo.getResponseStatus());
+            transactionActionInfoJson.put("responseMessageString", printableString(new String(txInfo.getResponseMessageBytes(), "UTF-8")));
+            transactionActionInfoJson.put("endorsementsCount", endorsementsCount);
+            transactionActionInfoJson.put("chaincodeInputArgsCount", chaincodeInputArgsCount);
+            transactionActionInfoJson.put("status", txInfo.getProposalResponseStatus());
+            transactionActionInfoJson.put("payload", printableString(new String(txInfo.getProposalResponsePayload(), "UTF-8")));
+
+            log.debug("Transaction action " + i + " has response status " + txInfo.getResponseStatus());
+            log.debug("Transaction action " + i + " has response message bytes as string: " + printableString(new String(txInfo.getResponseMessageBytes(), "UTF-8")));
+            log.debug("Transaction action " + i + " has endorsements " + endorsementsCount);
+
+            transactionActionInfoJson.put("endorserInfoArray", getEndorserInfoJsonArray(txInfo, endorsementsCount));
+
+            log.debug("Transaction action " + i + " has " + chaincodeInputArgsCount + " chaincode input arguments");
+
+            transactionActionInfoJson.put("argArray", getArgJSONArray(i, txInfo, chaincodeInputArgsCount));
+
+            log.debug("Transaction action " + i + " proposal response status: " + txInfo.getProposalResponseStatus());
+            log.debug("Transaction action " + i + " proposal response payload: " + printableString(new String(txInfo.getProposalResponsePayload())));
+
+            TxReadWriteSetInfo rwsetInfo = txInfo.getTxReadWriteSet();
+            JSONObject rwsetInfoJson = new JSONObject();
+            if (null != rwsetInfo) {
+                int nsRWsetCount = rwsetInfo.getNsRwsetCount();
+                rwsetInfoJson.put("nsRWsetCount", nsRWsetCount);
+                log.debug("Transaction action " + i + " has " + nsRWsetCount + " name space read write sets");
+                rwsetInfoJson.put("nsRwsetInfoArray", getNsRwsetInfoJsonArray(rwsetInfo));
+            }
+            transactionActionInfoJson.put("rwsetInfo", rwsetInfoJson);
+            transactionActionInfoJsonArray.add(transactionActionInfoJson);
+        }
+        return transactionActionInfoJsonArray;
+    }
+
+    /** 解析参数 */
+    private JSONArray getArgJSONArray(int i, TransactionEnvelopeInfo.TransactionActionInfo txInfo, int chaincodeInputArgsCount) throws UnsupportedEncodingException {
+        JSONArray argJsonArray = new JSONArray();
+        for (int z = 0; z < chaincodeInputArgsCount; ++z) {
+            argJsonArray.add(printableString(new String(txInfo.getChaincodeInputArgs(z), "UTF-8")));
+            log.debug("Transaction action " + i + " has chaincode input argument " + z + "is: " + printableString(new String(txInfo.getChaincodeInputArgs(z), "UTF-8")));
+        }
+        return argJsonArray;
+    }
+
+    /** 解析背书信息 */
+    private JSONArray getEndorserInfoJsonArray(TransactionEnvelopeInfo.TransactionActionInfo txInfo, int endorsementsCount) {
+        JSONArray endorserInfoJsonArray = new JSONArray();
+        for (int n = 0; n < endorsementsCount; ++n) {
+            BlockInfo.EndorserInfo endorserInfo = txInfo.getEndorsementInfo(n);
+            String signature = Hex.encodeHexString(endorserInfo.getSignature());
+            String id = endorserInfo.getId();
+            String mspId = endorserInfo.getMspid();
+            JSONObject endorserInfoJson = new JSONObject();
+            endorserInfoJson.put("signature", signature);
+            endorserInfoJson.put("id", id);
+            endorserInfoJson.put("mspId", mspId);
+
+            log.debug("Endorser " + n + " signature: " + signature);
+            log.debug("Endorser " + n + " id: " + id);
+            log.debug("Endorser " + n + " mspId: " + mspId);
+            endorserInfoJsonArray.add(endorserInfoJson);
+        }
+        return endorserInfoJsonArray;
+    }
+
+    /** 解析读写集集合 */
+    private JSONArray getNsRwsetInfoJsonArray(TxReadWriteSetInfo rwsetInfo) throws InvalidProtocolBufferException, UnsupportedEncodingException {
+        JSONArray nsRwsetInfoJsonArray = new JSONArray();
+        for (TxReadWriteSetInfo.NsRwsetInfo nsRwsetInfo : rwsetInfo.getNsRwsetInfos()) {
+            final String namespace = nsRwsetInfo.getNamespace();
+            KvRwset.KVRWSet rws = nsRwsetInfo.getRwset();
+            JSONObject nsRwsetInfoJson = new JSONObject();
+
+            nsRwsetInfoJson.put("readSet", getReadSetJSONArray(rws, namespace));
+            nsRwsetInfoJson.put("writeSet", getWriteSetJSONArray(rws, namespace));
+            nsRwsetInfoJsonArray.add(nsRwsetInfoJson);
+        }
+        return nsRwsetInfoJsonArray;
+    }
+
+    /** 解析读集 */
+    private JSONArray getReadSetJSONArray(KvRwset.KVRWSet rws, String namespace) {
+        JSONArray readJsonArray = new JSONArray();
+        int rs = -1;
+        for (KvRwset.KVRead readList : rws.getReadsList()) {
+            rs++;
+            String key = readList.getKey();
+            long readVersionBlockNum = readList.getVersion().getBlockNum();
+            long readVersionTxNum = readList.getVersion().getTxNum();
+            JSONObject readInfoJson = new JSONObject();
+            readInfoJson.put("namespace", namespace);
+            readInfoJson.put("readSetIndex", rs);
+            readInfoJson.put("key", key);
+            readInfoJson.put("readVersionBlockNum", readVersionBlockNum);
+            readInfoJson.put("readVersionTxNum", readVersionTxNum);
+            readInfoJson.put("chaincode_version", String.format("[%s : %s]", readVersionBlockNum, readVersionTxNum));
+            readJsonArray.add(readInfoJson);
+            log.debug("Namespace " + namespace + " read set " + rs + " key " + key + " version [" + readVersionBlockNum + " : " + readVersionTxNum + "]");
+        }
+        return readJsonArray;
+    }
+
+    /** 解析写集 */
+    private JSONArray getWriteSetJSONArray(KvRwset.KVRWSet rws, String namespace) throws UnsupportedEncodingException {
+        JSONArray writeJsonArray = new JSONArray();
+        int rs = -1;
+        for (KvRwset.KVWrite writeList : rws.getWritesList()) {
+            rs++;
+            String key = writeList.getKey();
+            String valAsString = printableString(new String(writeList.getValue().toByteArray(), "UTF-8"));
+            JSONObject writeInfoJson = new JSONObject();
+            writeInfoJson.put("namespace", namespace);
+            writeInfoJson.put("writeSetIndex", rs);
+            writeInfoJson.put("key", key);
+            writeInfoJson.put("value", valAsString);
+            log.debug("Namespace " + namespace + " write set " + rs + " key " + key + " has value " + valAsString);
+            writeJsonArray.add(writeInfoJson);
+        }
+        return writeJsonArray;
     }
 
     private String printableString(final String string) {

@@ -3,10 +3,11 @@ package com.github.kkgy333.sword.fabric.server.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.github.kkgy333.sword.fabric.server.mapper.*;
-import com.github.kkgy333.sword.fabric.server.model.League;
-import com.github.kkgy333.sword.fabric.server.model.User;
+import com.github.kkgy333.sword.fabric.server.dao.mapper.*;
+import com.github.kkgy333.sword.fabric.server.dao.League;
+import com.github.kkgy333.sword.fabric.server.dao.User;
 import com.github.kkgy333.sword.fabric.server.service.LeagueService;
+import com.github.kkgy333.sword.fabric.server.utils.CacheUtil;
 import com.github.kkgy333.sword.fabric.server.utils.DateUtil;
 import com.github.kkgy333.sword.fabric.server.utils.DeleteUtil;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,8 @@ public class LeagueServiceImpl implements LeagueService {
     @Resource
     private PeerMapper peerMapper;
     @Resource
+    private CAMapper caMapper;
+    @Resource
     private OrdererMapper ordererMapper;
     @Resource
     private ChannelMapper channelMapper;
@@ -42,7 +45,7 @@ public class LeagueServiceImpl implements LeagueService {
         if (StringUtils.isEmpty(leagueInfo.getName())) {
             return 0;
         }
-        leagueInfo.setDate(DateUtil.getCurrent("yyyy年MM月dd日"));
+        leagueInfo.setDate(DateUtil.getCurrent("yyyy-MM-dd"));
         return leagueMapper.insert(leagueInfo);
     }
 
@@ -66,7 +69,7 @@ public class LeagueServiceImpl implements LeagueService {
 
     @Override
     public int delete(int id) {
-        return DeleteUtil.obtain().deleteLeague(id, leagueMapper, orgMapper, ordererMapper, peerMapper, channelMapper, chaincodeMapper, appMapper);
+        return DeleteUtil.obtain().deleteLeague(id, leagueMapper, orgMapper, ordererMapper, peerMapper, caMapper, channelMapper, chaincodeMapper, appMapper);
     }
 
 }

@@ -1,5 +1,7 @@
 package com.github.kkgy333.sword.fabric.sdk;
 
+import com.alibaba.fastjson.JSONObject;
+
 import java.util.Map;
 
 /**
@@ -8,5 +10,9 @@ import java.util.Map;
  * @author : Aberic 【2018/5/22 18:49】
  */
 public interface BlockListener {
-    void received(Map<String, String> map);
+
+    int SUCCESS = 200;
+    int ERROR = 9999;
+
+    void received(JSONObject jsonObject);
 }

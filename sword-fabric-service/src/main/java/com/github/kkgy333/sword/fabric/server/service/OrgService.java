@@ -1,6 +1,6 @@
 package com.github.kkgy333.sword.fabric.server.service;
 
-import com.github.kkgy333.sword.fabric.server.model.Org;
+import com.github.kkgy333.sword.fabric.server.dao.Org;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -11,9 +11,9 @@ import java.util.List;
  **/
 public interface OrgService {
 
-    int add(Org org, MultipartFile file);
+    int add(Org org);
 
-    int update(Org org, MultipartFile file);
+    int update(Org org);
 
     List<Org> listAll();
 

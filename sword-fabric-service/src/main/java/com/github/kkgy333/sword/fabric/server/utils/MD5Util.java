@@ -9,6 +9,18 @@ import org.apache.commons.codec.digest.DigestUtils;
 public class MD5Util {
 
     /**
+     * 将字符串md5散列值24位
+     *
+     * @param content
+     *            散列值内容
+     * @return 散列值结果
+     */
+    public static String md516(String content) {
+        String str = md5(content);
+        return str.substring(8, 24);
+    }
+
+    /**
      * MD5方法
      *
      * @param text 明文
@@ -17,7 +29,7 @@ public class MD5Util {
     public static String md5(String text) {
         //加密后的字符串
         String encodeStr = DigestUtils.md5Hex(text);
-        System.out.println("MD5加密后的字符串为:encodeStr=" + encodeStr);
+        System.out.println("MD5:encodeStr=" + encodeStr);
         return encodeStr;
     }
 

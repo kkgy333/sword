@@ -2,21 +2,18 @@ package com.github.kkgy333.sword.fabric.server.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.github.kkgy333.sword.fabric.server.mapper.AppMapper;
-import com.github.kkgy333.sword.fabric.server.mapper.ChaincodeMapper;
-import com.github.kkgy333.sword.fabric.server.mapper.ChannelMapper;
-import com.github.kkgy333.sword.fabric.server.mapper.PeerMapper;
-import com.github.kkgy333.sword.fabric.server.model.Orderer;
-import com.github.kkgy333.sword.fabric.server.model.Peer;
+import com.github.kkgy333.sword.fabric.server.dao.mapper.*;
+import com.github.kkgy333.sword.fabric.server.dao.*;
 import com.github.kkgy333.sword.fabric.server.service.PeerService;
-import com.github.kkgy333.sword.fabric.server.utils.DateUtil;
-import com.github.kkgy333.sword.fabric.server.utils.DeleteUtil;
-import com.github.kkgy333.sword.fabric.server.utils.FabricHelper;
-
+import com.github.kkgy333.sword.fabric.server.utils.*;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -29,34 +26,48 @@ public class PeerServiceImpl implements PeerService {
     @Resource
     private PeerMapper peerMapper;
     @Resource
+    private CAMapper caMapper;
+    @Resource
     private ChannelMapper channelMapper;
     @Resource
     private ChaincodeMapper chaincodeMapper;
     @Resource
     private AppMapper appMapper;
-
+    @Resource
+    private Environment env;
 
     @Override
-    public int add(Peer peer) {
+    public int add(Peer peer, MultipartFile serverCrtFile) {
         if (StringUtils.isEmpty(peer.getName()) ||
                 StringUtils.isEmpty(peer.getLocation()) ||
-                StringUtils.isEmpty(peer.getEventHubName()) ||
                 StringUtils.isEmpty(peer.getEventHubLocation())) {
             return 0;
         }
-        peer.setDate(DateUtil.getCurrent("yyyy年MM月dd日"));
+        if (StringUtils.isNotEmpty(serverCrtFile.getOriginalFilename())) {
+            if (saveFileFail(peer, serverCrtFile)) {
+                return 0;
+            }
+        }
+        peer.setDate(DateUtil.getCurrent("yyyy-MM-dd"));
         return peerMapper.insert(peer);
     }
 
     @Override
-    public int update(Peer peer) {
-        FabricHelper.obtain().removeManager(listById(peer.getOrgId()), channelMapper, chaincodeMapper);
+    public int update(Peer peer, MultipartFile serverCrtFile) {
+        FabricHelper.obtain().removeChaincodeManager(channelMapper.list(peer.getId()), chaincodeMapper);
+        CacheUtil.removeFlagCA(peer.getId(), caMapper);
+        if (null == serverCrtFile) {
+            return peerMapper.updateWithNoFile(peer);
+        }
+        if (saveFileFail(peer, serverCrtFile)) {
+            return 0;
+        }
         return peerMapper.updateById(peer);
     }
 
     @Override
     public List<Peer> listAll() {
-        return peerMapper.selectList(null);
+        return peerMapper.listAll();
     }
 
     @Override
@@ -87,6 +98,27 @@ public class PeerServiceImpl implements PeerService {
 
     @Override
     public int delete(int id) {
-        return DeleteUtil.obtain().deletePeer(id, peerMapper, channelMapper, chaincodeMapper, appMapper);
+        return DeleteUtil.obtain().deletePeer(id, peerMapper, caMapper, channelMapper, chaincodeMapper, appMapper);
+    }
+
+    private boolean saveFileFail(Peer peer, MultipartFile serverCrtFile) {
+        String peerTlsPath = String.format("%s%s%s%s%s%s%s%s",
+                env.getProperty("config.dir"),
+                File.separator,
+                peer.getLeagueName(),
+                File.separator,
+                peer.getOrgName(),
+                File.separator,
+                peer.getName(),
+                File.separator);
+        String serverCrtPath = String.format("%s%s", peerTlsPath, serverCrtFile.getOriginalFilename());
+        peer.setServerCrtPath(serverCrtPath);
+        try {
+            FileUtil.save(serverCrtFile, serverCrtPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return true;
+        }
+        return false;
     }
 }

@@ -3,16 +3,18 @@ package com.github.kkgy333.sword.fabric.server.service.impl;
 import com.github.kkgy333.sword.fabric.sdk.FabricManager;
 import com.github.kkgy333.sword.fabric.server.base.BaseService;
 import com.github.kkgy333.sword.fabric.server.bean.State;
-import com.github.kkgy333.sword.fabric.server.mapper.*;
+import com.github.kkgy333.sword.fabric.server.dao.CA;
+import com.github.kkgy333.sword.fabric.server.dao.mapper.*;
 import com.github.kkgy333.sword.fabric.server.service.StateService;
+import com.github.kkgy333.sword.fabric.server.utils.CacheUtil;
 import com.github.kkgy333.sword.fabric.server.utils.FabricHelper;
 import com.github.kkgy333.sword.fabric.server.utils.VerifyUtil;
 import org.springframework.stereotype.Service;
-
+import org.apache.commons.lang3.StringUtils;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
-
+import com.alibaba.fastjson.JSONObject;
 /**
  * Author: kkgy333
  * Date: 2018/7/23
@@ -29,18 +31,20 @@ public class StateServiceImpl implements StateService, BaseService {
     @Resource
     private PeerMapper peerMapper;
     @Resource
+    private CAMapper caMapper;
+    @Resource
     private ChannelMapper channelMapper;
     @Resource
     private ChaincodeMapper chaincodeMapper;
 
     @Override
     public String invoke(State state) {
-        return chaincodeByVerify(state, ChainCodeIntent.INVOKE);
+        return chaincode(state, ChainCodeIntent.INVOKE, CacheUtil.getFlagCA(state.getFlag(), caMapper));
     }
 
     @Override
     public String query(State state) {
-        return chaincodeByVerify(state, ChainCodeIntent.QUERY);
+        return chaincode(state, ChainCodeIntent.QUERY, CacheUtil.getFlagCA(state.getFlag(), caMapper));
     }
 
 
@@ -48,14 +52,11 @@ public class StateServiceImpl implements StateService, BaseService {
         INVOKE, QUERY
     }
 
-    private String chaincodeByVerify(State state, ChainCodeIntent intent) {
-        if (VerifyUtil.unRequest(state, chaincodeMapper, appMapper)) {
-            return responseFail("app key is invalid");
+    private String chaincode(State state, ChainCodeIntent intent, CA ca) {
+        String cc = VerifyUtil.getCc(state, chaincodeMapper, appMapper);
+        if (StringUtils.isEmpty(cc)) {
+            return responseFail("Request failed：app key is invalid");
         }
-        return chaincode(state, intent);
-    }
-
-    private String chaincode(State state, ChainCodeIntent intent) {
         List<String> array = state.getStrArray();
         int length = array.size();
         String fcn = null;
@@ -67,27 +68,23 @@ public class StateServiceImpl implements StateService, BaseService {
                 argArray[i - 1] = array.get(i);
             }
         }
-        return chaincodeExec(state, intent, fcn, argArray);
+        return chaincodeExec(intent, ca, cc, fcn, argArray);
     }
 
-    private String chaincodeExec(State state, ChainCodeIntent intent, String fcn, String[] argArray) {
-        Map<String, String> resultMap = null;
+    private String chaincodeExec(ChainCodeIntent intent, CA ca, String cc, String fcn, String[] argArray) {
+        JSONObject jsonObject = null;
         try {
             FabricManager manager = FabricHelper.obtain().get(orgMapper, channelMapper, chaincodeMapper, ordererMapper, peerMapper,
-                    state.getId());
+                    ca, cc);
             switch (intent) {
                 case INVOKE:
-                    resultMap = manager.invoke(fcn, argArray);
+                    jsonObject = manager.invoke(fcn, argArray);
                     break;
                 case QUERY:
-                    resultMap = manager.query(fcn, argArray, state.getVersion());
+                    jsonObject = manager.query(fcn, argArray);
                     break;
             }
-            if (resultMap.get("code").equals("error")) {
-                return responseFail(resultMap.get("data"));
-            } else {
-                return responseSuccess(resultMap.get("data"), resultMap.get("txid"));
-            }
+            return jsonObject.toJSONString();
         } catch (Exception e) {
             e.printStackTrace();
             return responseFail(String.format("Request failed： %s", e.getMessage()));

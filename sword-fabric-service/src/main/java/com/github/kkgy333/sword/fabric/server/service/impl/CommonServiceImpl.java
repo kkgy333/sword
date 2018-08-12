@@ -2,8 +2,8 @@ package com.github.kkgy333.sword.fabric.server.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.github.kkgy333.sword.fabric.server.mapper.UserMapper;
-import com.github.kkgy333.sword.fabric.server.model.User;
+import com.github.kkgy333.sword.fabric.server.dao.mapper.*;
+import com.github.kkgy333.sword.fabric.server.dao.*;
 import com.github.kkgy333.sword.fabric.server.service.CommonService;
 import com.github.kkgy333.sword.fabric.server.utils.CacheUtil;
 import com.github.kkgy333.sword.fabric.server.utils.MD5Util;
@@ -26,7 +26,6 @@ public class CommonServiceImpl implements CommonService {
     @Override
     public String login(User user) {
         try {
-
             Wrapper<User> queryWrapper = new QueryWrapper<User>();
             ((QueryWrapper<User>) queryWrapper).eq("username",user.getUsername());
             User remoteUser = userMapper.selectOne(queryWrapper);

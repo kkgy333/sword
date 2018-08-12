@@ -2,9 +2,8 @@ package com.github.kkgy333.sword.fabric.server.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.github.kkgy333.sword.fabric.server.mapper.UserMapper;
-import com.github.kkgy333.sword.fabric.server.model.League;
-import com.github.kkgy333.sword.fabric.server.model.User;
+import com.github.kkgy333.sword.fabric.server.dao.mapper.*;
+import com.github.kkgy333.sword.fabric.server.dao.*;
 import com.github.kkgy333.sword.fabric.server.service.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;

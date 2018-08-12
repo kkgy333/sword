@@ -73,7 +73,7 @@ public class FabricJavaTest {
 //            ordererProperties.setProperty("pemFile", "/Users/sagay/fabric-tools/fabric-scripts/hlfv11/composer/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt");crt
 
             //创建orderer服务器客户端代理并加到通道中
-            Orderer orderer = hfclient.newOrderer("orderer", "grpc://127.0.0.1:7050");
+            Orderer orderer = hfclient.newOrderer("orderer", "grpc://192.168.109.128:7050");
             channel.addOrderer(orderer);
 
 
@@ -89,7 +89,7 @@ public class FabricJavaTest {
 
 
             //创建Peer服务器节点的客户端代理并加入到通道中
-            Peer peer = hfclient.newPeer("peer0.org1.example.com", "grpc://localhost:7051");
+            Peer peer = hfclient.newPeer("peer0.org1.example.com", "grpc://192.168.109.128:7051");
             channel.addPeer(peer);
 
             //初始化通道
@@ -157,7 +157,7 @@ public class FabricJavaTest {
 
 
             CryptoSuite cryptosuite = CryptoSuite.Factory.getCryptoSuite();
-            HFCAClient caclient = HFCAClient.createNewInstance("http://127.0.0.1:7054", null);
+            HFCAClient caclient = HFCAClient.createNewInstance("http://192.168.109.128:7054", null);
 
             caclient.setCryptoSuite(cryptosuite);
             Enrollment enrollment = caclient.enroll(username, "adminpw");

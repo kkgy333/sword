@@ -2,7 +2,7 @@ package com.github.kkgy333.sword.fabric.server.service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.github.kkgy333.sword.fabric.server.bean.Api;
-import com.github.kkgy333.sword.fabric.server.model.Chaincode;
+import com.github.kkgy333.sword.fabric.server.dao.Chaincode;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
