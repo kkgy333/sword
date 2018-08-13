@@ -1,6 +1,6 @@
 package com.github.kkgy333.sword.fabric.server.controller;
 
-import com.github.kkgy333.sword.fabric.server.model.Org;
+import com.github.kkgy333.sword.fabric.server.dao.Org;
 import com.github.kkgy333.sword.fabric.server.service.LeagueService;
 import com.github.kkgy333.sword.fabric.server.service.OrgService;
 import com.github.kkgy333.sword.fabric.server.service.PeerService;
@@ -33,15 +33,14 @@ public class OrgController {
     @PostMapping(value = "submit")
     public ModelAndView submit(@ModelAttribute Org org,
                                @RequestParam("intent") String intent,
-                               @RequestParam("file") MultipartFile file,
                                @RequestParam("id") int id) {
         switch (intent) {
             case "add":
-                orgService.add(org, file);
+                orgService.add(org);
                 break;
             case "edit":
                 org.setId(id);
-                orgService.update(org, file);
+                orgService.update(org);
                 break;
         }
         return new ModelAndView(new RedirectView("list"));

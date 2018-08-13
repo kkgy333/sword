@@ -1,6 +1,6 @@
 package com.github.kkgy333.sword.fabric.server.service;
 
-import com.github.kkgy333.sword.fabric.server.model.League;
+import com.github.kkgy333.sword.fabric.server.dao.League;
 
 import java.util.List;
 

@@ -10,7 +10,7 @@ import java.util.List;
  **/
 public interface AppService {
 
-    int add(App app, int chaincodeId);
+    int add(App app);
 
     int update(App app);
 
@@ -24,5 +24,7 @@ public interface AppService {
 
     int deleteAll(int id);
 
-    int count(int id);
+    int count();
+
+    int countById(int id);
 }

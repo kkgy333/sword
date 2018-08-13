@@ -1,6 +1,7 @@
 package com.github.kkgy333.sword.fabric.server.service;
 
 import com.github.kkgy333.sword.fabric.server.bean.Trace;
+import com.github.kkgy333.sword.fabric.server.dao.CA;
 
 /**
  * Author: kkgy333
@@ -14,11 +15,9 @@ public interface TraceService {
 
     String queryBlockByNumber(Trace trace);
 
-    String queryBlockChainInfo(int id, String key);
+    String queryBlockChainInfo(String cc, String key, CA ca);
 
     String queryBlockByNumberForIndex(Trace trace);
 
-    String queryBlockChainInfoForIndex(int id);
-
-    String test();
+    String queryBlockChainInfoForIndex(int channelId);
 }

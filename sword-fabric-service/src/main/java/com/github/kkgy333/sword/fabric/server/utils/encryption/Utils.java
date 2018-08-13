@@ -1,6 +1,7 @@
 package com.github.kkgy333.sword.fabric.server.utils.encryption;
 
 import com.github.kkgy333.sword.fabric.server.bean.Key;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 
 import java.io.*;
@@ -18,6 +19,7 @@ import java.util.Objects;
  * Author: kkgy333
  * Date: 2018/7/23
  **/
+@Slf4j
 public class Utils {
 
     private static Utils instance = null;
@@ -58,8 +60,8 @@ public class Utils {
         RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate(); // 得到私钥
         String publicKeyStr = Base64.encodeBase64String(publicKey.getEncoded()); // 得到公钥字符串
         String privateKeyStr = Base64.encodeBase64String(privateKey.getEncoded()); // 得到私钥字符串
-//        log.debug("publicKeyStr = " + publicKeyStr);
-//        log.debug("privateKeyStr = " + privateKeyStr);
+        log.debug("publicKeyStr = " + publicKeyStr);
+        log.debug("privateKeyStr = " + privateKeyStr);
         try {
             File pubFile = new File(String.format("%s/%s_publicRSA.key", path, keyName));
             File priFile = new File(String.format("%s/%s_privateRSA.key", path, keyName));
@@ -115,8 +117,8 @@ public class Utils {
         ECPrivateKey privateKey = (ECPrivateKey) keyPair.getPrivate(); // 得到私钥
         String publicKeyStr = Base64.encodeBase64String(publicKey.getEncoded()); // 得到公钥字符串
         String privateKeyStr = Base64.encodeBase64String(privateKey.getEncoded()); // 得到私钥字符串
-//        log.debug("publicKeyStr = " + publicKeyStr);
-//        log.debug("privateKeyStr = " + privateKeyStr);
+        log.debug("publicKeyStr = " + publicKeyStr);
+        log.debug("privateKeyStr = " + privateKeyStr);
         try {
             // 将密钥对写入到文件
             FileWriter pubfw = new FileWriter(String.format("%s/%s_publicECDSA.key", path, keyName));
@@ -155,8 +157,8 @@ public class Utils {
         ECPrivateKey privateKey = (ECPrivateKey) keyPair.getPrivate(); // 得到私钥
         String publicKeyStr = Base64.encodeBase64String(publicKey.getEncoded()); // 得到公钥字符串
         String privateKeyStr = Base64.encodeBase64String(privateKey.getEncoded()); // 得到私钥字符串
-//        log.debug("publicKeyStr = " + publicKeyStr);
-//        log.debug("privateKeyStr = " + privateKeyStr);
+        log.debug("publicKeyStr = " + publicKeyStr);
+        log.debug("privateKeyStr = " + privateKeyStr);
         return new Key(privateKeyStr, publicKeyStr);
     }
 
@@ -166,10 +168,10 @@ public class Utils {
      * @return /WEB-INF/classes/fabric/${resName}/
      */
     public String getKeyPath(String resName) {
-//        log.debug("getResource = " + Utils.class.getClassLoader().getResource(resName));
+        log.debug("getResource = " + Utils.class.getClassLoader().getResource(resName));
         String directories = Objects.requireNonNull(Utils.class.getClassLoader().getResource(resName)).getFile();
         File directory = new File(directories);
-//        log.debug("directories = " + directories);
+        log.debug("directories = " + directories);
         return directory.getPath();
     }
 

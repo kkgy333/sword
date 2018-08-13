@@ -1,6 +1,6 @@
 package com.github.kkgy333.sword.fabric.server.controller;
 
-import com.github.kkgy333.sword.fabric.server.model.League;
+import com.github.kkgy333.sword.fabric.server.dao.League;
 import com.github.kkgy333.sword.fabric.server.service.LeagueService;
 import com.github.kkgy333.sword.fabric.server.service.OrgService;
 import com.github.kkgy333.sword.fabric.server.utils.SpringUtil;
@@ -48,7 +48,6 @@ public class LeagueController {
         modelAndView.addObject("intentLittle", SpringUtil.get("enter"));
         modelAndView.addObject("submit", SpringUtil.get("submit"));
         modelAndView.addObject("intent", "add");
-        modelAndView.addObject("versions", VerifyUtil.versions());
         modelAndView.addObject("league", new League());
         return modelAndView;
     }
@@ -59,7 +58,6 @@ public class LeagueController {
         modelAndView.addObject("intentLittle", SpringUtil.get("edit"));
         modelAndView.addObject("submit", SpringUtil.get("modify"));
         modelAndView.addObject("intent", "edit");
-        modelAndView.addObject("versions", VerifyUtil.versions());
         modelAndView.addObject("league", leagueService.get(id));
         return modelAndView;
     }

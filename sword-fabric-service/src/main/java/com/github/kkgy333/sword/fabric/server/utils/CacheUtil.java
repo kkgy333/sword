@@ -1,9 +1,17 @@
 package com.github.kkgy333.sword.fabric.server.utils;
 
-import com.github.kkgy333.sword.fabric.server.mapper.ChaincodeMapper;
+import com.github.kkgy333.sword.fabric.sdk.FabricManager;
+import com.github.kkgy333.sword.fabric.server.bean.App;
+import com.github.kkgy333.sword.fabric.server.bean.Home;
+import com.github.kkgy333.sword.fabric.server.dao.CA;
+import com.github.kkgy333.sword.fabric.server.dao.Peer;
+import com.github.kkgy333.sword.fabric.server.dao.mapper.AppMapper;
+import com.github.kkgy333.sword.fabric.server.dao.mapper.CAMapper;
+import com.github.kkgy333.sword.fabric.server.dao.mapper.PeerMapper;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -12,16 +20,28 @@ import java.util.concurrent.TimeUnit;
  **/
 public class CacheUtil {
 
-    private static Cache<String, String> cacheString = CacheBuilder.newBuilder().maximumSize(10)
-            .expireAfterAccess(30, TimeUnit.MINUTES).build();
+    private static Cache<String, String> cacheString = CacheBuilder.newBuilder().maximumSize(1000)
+            .expireAfterAccess(12, TimeUnit.HOURS).build();
 
-    /** 存储key，chaincodeId */
-    private static Cache<String, Integer> cacheKeyChaincodeId = CacheBuilder.newBuilder().maximumSize(100)
-            .expireAfterAccess(30, TimeUnit.MINUTES).build();
+    /** 存储 flag，ca */
+    private static Cache<String, CA> cacheFlagCA = CacheBuilder.newBuilder().maximumSize(1000)
+            .expireAfterAccess(12, TimeUnit.HOURS).build();
 
-    /** 存储chaincodeId，open */
-    private static Cache<Integer, Boolean> cacheChaincodeId = CacheBuilder.newBuilder().maximumSize(20)
-            .expireAfterAccess(30, TimeUnit.MINUTES).build();
+    /** 存储 app，bool */
+    private static Cache<String, Boolean> cacheAppBool = CacheBuilder.newBuilder().maximumSize(1000)
+            .expireAfterAccess(12, TimeUnit.HOURS).build();
+
+    /** 存储 cc，fabric-manager*/
+    private static Cache<String, FabricManager> cacheStringFabric = CacheBuilder.newBuilder().maximumSize(1000)
+            .expireAfterAccess(12, TimeUnit.HOURS).build();
+
+    /** 存储 channelId，fabric-manager*/
+    private static Cache<Integer, FabricManager> cacheIntegerFabric = CacheBuilder.newBuilder().maximumSize(1000)
+            .expireAfterAccess(12, TimeUnit.HOURS).build();
+
+    /** 存储 channelId，fabric-manager*/
+    private static Cache<String, Home> cacheHome = CacheBuilder.newBuilder().maximumSize(1)
+            .expireAfterAccess(5, TimeUnit.MINUTES).build();
 
     public static void putString(String key, String value) {
         cacheString.put(key, value);
@@ -39,38 +59,110 @@ public class CacheUtil {
         cacheString.invalidate(key);
     }
 
-    public static void putKeyChaincodeId(String key, int value) {
-        cacheKeyChaincodeId.put(key, value);
+    private static void putFlagCA(String flag, CA ca) {
+        cacheFlagCA.put(flag, ca);
     }
 
-    public static int getKeyChaincodeId(String key) {
-        try {
-            return cacheKeyChaincodeId.getIfPresent(key);
-        } catch (Exception e) {
-            return -1;
+    public static CA getFlagCA(String flag, CAMapper caMapper) {
+        CA ca = cacheFlagCA.getIfPresent(flag);
+        if (null == ca) {
+            ca = caMapper.getByFlag(flag);
+            if (null == ca) {
+                return null;
+            } else {
+                putFlagCA(flag, ca);
+            }
+        }
+        return ca;
+    }
+
+    public static void removeFlagCA(int leagueId, PeerMapper peerMapper, CAMapper caMapper) {
+        List<Peer> peers = peerMapper.list(leagueId);
+        for (Peer peer : peers) {
+            removeFlagCA(peer.getId(), caMapper);
         }
     }
 
-    public static void removeKeyChaincodeId(String key) {
-        cacheKeyChaincodeId.invalidate(key);
-    }
-
-    public static void putChaincodeId(int key, boolean value) {
-        cacheChaincodeId.put(key, value);
-    }
-
-    public static boolean getChaincodeId(int key, ChaincodeMapper chaincodeMapper) {
-        try {
-            return cacheChaincodeId.getIfPresent(key);
-        } catch (Exception e) {
-            boolean isOpen = chaincodeMapper.get(key).isOpen();
-            putChaincodeId(key, isOpen);
-            return isOpen;
+    public static void removeFlagCA(int peerId, CAMapper caMapper) {
+        List<CA> cas = caMapper.list(peerId);
+        for (CA ca : cas) {
+            removeFlagCA(ca.getFlag());
         }
     }
 
-    public static void removeChaincodeId(int key) {
-        cacheChaincodeId.invalidate(key);
+    public static void removeFlagCA(String flag) {
+        cacheFlagCA.invalidate(flag);
+    }
+
+    private static void putAppBool(String key, boolean value) {
+        cacheAppBool.put(key, value);
+    }
+
+    static boolean getAppBool(String key, AppMapper appMapper) {
+        try {
+            return cacheAppBool.getIfPresent(key);
+        } catch (Exception e) {
+            App app = appMapper.getByKey(key);
+            if (null == app) {
+                return false;
+            }
+            boolean flag = app.isActive();
+            if (flag) {
+                putAppBool(key, true);
+            } else {
+                putAppBool(key, false);
+            }
+            return flag;
+        }
+    }
+
+    public static void removeAppBool(String key) {
+        cacheAppBool.invalidate(key);
+    }
+
+
+    static void putStringFabric(String key, FabricManager value) {
+        cacheStringFabric.put(key, value);
+    }
+
+    static FabricManager getStringFabric(String key) {
+        try {
+            return cacheStringFabric.getIfPresent(key);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    static void removeStringFabric(String key) {
+        cacheStringFabric.invalidate(key);
+    }
+
+    static void putIntegerFabric(int key, FabricManager value) {
+        cacheIntegerFabric.put(key, value);
+    }
+
+    static FabricManager getIntegerFabric(int key) {
+        try {
+            return cacheIntegerFabric.getIfPresent(key);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    static void removeIntegerFabric(int key) {
+        cacheIntegerFabric.invalidate(key);
+    }
+
+    public static void putHome(Home value) {
+        cacheHome.put("do-home-cache", value);
+    }
+
+    public static Home getHome() {
+        try {
+            return cacheHome.getIfPresent("do-home-cache");
+        } catch (Exception e) {
+            return null;
+        }
     }
 
 }

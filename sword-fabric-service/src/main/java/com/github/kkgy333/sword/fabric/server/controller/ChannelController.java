@@ -1,9 +1,9 @@
 package com.github.kkgy333.sword.fabric.server.controller;
 
-import com.github.kkgy333.sword.fabric.server.model.Channel;
-import com.github.kkgy333.sword.fabric.server.model.League;
-import com.github.kkgy333.sword.fabric.server.model.Org;
-import com.github.kkgy333.sword.fabric.server.model.Peer;
+import com.github.kkgy333.sword.fabric.server.dao.Channel;
+import com.github.kkgy333.sword.fabric.server.dao.League;
+import com.github.kkgy333.sword.fabric.server.dao.Org;
+import com.github.kkgy333.sword.fabric.server.dao.Peer;
 import com.github.kkgy333.sword.fabric.server.service.*;
 import com.github.kkgy333.sword.fabric.server.utils.SpringUtil;
 import org.springframework.web.bind.annotation.*;
@@ -55,15 +55,14 @@ public class ChannelController {
         modelAndView.addObject("intentLittle", SpringUtil.get("enter"));
         modelAndView.addObject("submit", SpringUtil.get("submit"));
         modelAndView.addObject("intent", "add");
-        Channel channel = new Channel();
+        modelAndView.addObject("channel", new Channel());
         List<Peer> peers = peerService.listAll();
         for (Peer peer : peers) {
             Org org = orgService.get(peer.getOrgId());
-            peer.setOrgName(org.getName());
+            peer.setOrgName(org.getMspId());
             League league = leagueService.get(org.getLeagueId());
             peer.setLeagueName(league.getName());
         }
-        modelAndView.addObject("channel", channel);
         modelAndView.addObject("peers", peers);
         return modelAndView;
     }
@@ -76,13 +75,13 @@ public class ChannelController {
         modelAndView.addObject("intent", "edit");
         Channel channel = channelService.get(id);
         Org org = orgService.get(peerService.get(channel.getPeerId()).getOrgId());
-        channel.setOrgName(org.getName());
+        channel.setOrgName(org.getMspId());
         List<Peer> peers = peerService.listById(org.getId());
         League league = leagueService.get(orgService.get(org.getId()).getLeagueId());
         channel.setLeagueName(league.getName());
         for (Peer peer : peers) {
             peer.setLeagueName(league.getName());
-            peer.setOrgName(org.getName());
+            peer.setOrgName(org.getMspId());
         }
         modelAndView.addObject("channel", channel);
         modelAndView.addObject("peers", peers);

@@ -41,22 +41,22 @@ public class TestFabricManager {
             orgManager.init("peerOrg2","peerOrg2","Org2MSP",false);
 
             SampleOrg sampleOrg1 = orgManager.get("peerOrg1");
-            sampleOrg1.addPeerLocation("peer0.org1.example.com",orgManager.grpcTLSify(false, "grpc://localhost:7051"));
-            sampleOrg1.addPeerLocation("peer1.org1.example.com",orgManager.grpcTLSify(false, "grpc://localhost:7056"));
+            sampleOrg1.addPeerLocation("peer0.org1.example.com",orgManager.grpcTLSify(false, "grpc://192.168.109.128:7051"));
+            sampleOrg1.addPeerLocation("peer1.org1.example.com",orgManager.grpcTLSify(false, "grpc://192.168.109.128:7056"));
 
-            sampleOrg1.addOrdererLocation("orderer.example.com",orgManager.grpcTLSify(false, "grpc://localhost:7050"));
+            sampleOrg1.addOrdererLocation("orderer.example.com",orgManager.grpcTLSify(false, "grpc://192.168.109.128:7050"));
             sampleOrg1.setDomainName("org1.example.com");
-            sampleOrg1.setCALocation(orgManager.httpTLSify(false,"http://localhost:7054"));
+            sampleOrg1.setCALocation(orgManager.httpTLSify(false,"http://192.168.109.128:7054"));
             sampleOrg1.setCAName("ca0");
 
 
             SampleOrg sampleOrg2 = orgManager.get("peerOrg2");
-            sampleOrg2.addPeerLocation("peer0.org2.example.com",orgManager.grpcTLSify(false, "grpc://localhost:8051"));
-            sampleOrg2.addPeerLocation("peer1.org2.example.com",orgManager.grpcTLSify(false, "grpc://localhost:8056"));
+            sampleOrg2.addPeerLocation("peer0.org2.example.com",orgManager.grpcTLSify(false, "grpc://192.168.109.128:8051"));
+            sampleOrg2.addPeerLocation("peer1.org2.example.com",orgManager.grpcTLSify(false, "grpc://192.168.109.128:8056"));
 
-            sampleOrg2.addOrdererLocation("orderer.example.com",orgManager.grpcTLSify(false, "grpc://localhost:7050"));
+            sampleOrg2.addOrdererLocation("orderer.example.com",orgManager.grpcTLSify(false, "grpc://192.168.109.128:7050"));
             sampleOrg2.setDomainName("org2.example.com");
-            sampleOrg2.setCALocation(orgManager.httpTLSify(false,"http://localhost:8054"));
+            sampleOrg2.setCALocation(orgManager.httpTLSify(false,"http://192.168.109.128:8054"));
 
             orgManager.initCAClient();
 
@@ -205,8 +205,7 @@ public class TestFabricManager {
     public static final String FAB_CONFIG_GEN_VERS =
             Objects.equals(System.getenv("ORG_HYPERLEDGER_FABRIC_SDKTEST_VERSION"), "1.0.0") ? "v1.0" : "v1.2";
     public static String getTestChannelPath() {
-        return "/Volumes/Work/MY_Project/区块链/sdk/fabric-sdk-java/src/test/fixture/sdkintegration/e2e-2Orgs/" + FAB_CONFIG_GEN_VERS;
-
+        return "C:/Users/guyang/IdeaProjects/fabric-sdk-java/src/test/fixture/sdkintegration/e2e-2Orgs/" + FAB_CONFIG_GEN_VERS;
     }
 
     static int[]  fabricVersion = new int[3];

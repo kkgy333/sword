@@ -3,7 +3,7 @@ package com.github.kkgy333.sword.fabric.server.service.impl;
 
 import com.github.kkgy333.sword.fabric.server.bean.App;
 import com.github.kkgy333.sword.fabric.server.bean.Key;
-import com.github.kkgy333.sword.fabric.server.mapper.AppMapper;
+import com.github.kkgy333.sword.fabric.server.dao.mapper.*;
 import com.github.kkgy333.sword.fabric.server.service.AppService;
 import com.github.kkgy333.sword.fabric.server.utils.CacheUtil;
 import com.github.kkgy333.sword.fabric.server.utils.DateUtil;
@@ -23,9 +23,11 @@ public class AppServiceImpl implements AppService {
 
     @Resource
     private AppMapper appMapper;
+    @Resource
+    private ChaincodeMapper chaincodeMapper;
 
     @Override
-    public int add(App app, int chaincodeId) {
+    public int add(App app) {
         if (null != appMapper.check(app)) {
             return 0;
         }
@@ -35,12 +37,11 @@ public class AppServiceImpl implements AppService {
         }
         app.setPublicKey(key.getPublicKey());
         app.setPrivateKey(key.getPrivateKey());
-        app.setChaincodeId(chaincodeId);
         app.setKey(MathUtil.getRandom8());
         app.setCreateDate(DateUtil.getCurrent("yyyy-MM-dd HH:mm:ss"));
         app.setModifyDate(DateUtil.getCurrent("yyyy-MM-dd HH:mm:ss"));
         if (app.isActive()) {
-            CacheUtil.putKeyChaincodeId(app.getKey(), app.getChaincodeId());
+            CacheUtil.putString(app.getKey(), chaincodeMapper.get(app.getChaincodeId()).getCc());
         }
         return appMapper.add(app);
     }
@@ -48,11 +49,7 @@ public class AppServiceImpl implements AppService {
     @Override
     public int update(App app) {
         app.setModifyDate(DateUtil.getCurrent("yyyy-MM-dd HH:mm:ss"));
-        if (app.isActive()) {
-            CacheUtil.putKeyChaincodeId(app.getKey(), app.getChaincodeId());
-        } else {
-            CacheUtil.removeString(app.getKey());
-        }
+        CacheUtil.removeAppBool(app.getKey());
         return appMapper.update(app);
     }
 
@@ -60,10 +57,10 @@ public class AppServiceImpl implements AppService {
     public int updateKey(int id) {
         App app = new App();
         app.setId(id);
-        CacheUtil.removeKeyChaincodeId(appMapper.get(id).getKey());
+        CacheUtil.removeString(appMapper.get(id).getKey());
         app.setKey(MathUtil.getRandom8());
         if (app.isActive()) {
-            CacheUtil.putKeyChaincodeId(app.getKey(), app.getChaincodeId());
+            CacheUtil.putString(app.getKey(), chaincodeMapper.get(app.getChaincodeId()).getCc());
         } else {
             CacheUtil.removeString(app.getKey());
         }
@@ -97,7 +94,12 @@ public class AppServiceImpl implements AppService {
     }
 
     @Override
-    public int count(int id) {
-        return appMapper.count(id);
+    public int countById(int id) {
+        return appMapper.countById(id);
+    }
+
+    @Override
+    public int count() {
+        return appMapper.count();
     }
 }

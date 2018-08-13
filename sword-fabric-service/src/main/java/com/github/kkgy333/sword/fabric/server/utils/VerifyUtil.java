@@ -3,9 +3,8 @@ package com.github.kkgy333.sword.fabric.server.utils;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.github.kkgy333.sword.fabric.server.base.BaseChain;
-import com.github.kkgy333.sword.fabric.server.mapper.AppMapper;
-import com.github.kkgy333.sword.fabric.server.mapper.ChaincodeMapper;
-
+import com.github.kkgy333.sword.fabric.server.dao.mapper.*;
+import org.apache.commons.lang3.StringUtils;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -15,45 +14,21 @@ import java.util.List;
  **/
 public class VerifyUtil {
 
-    /**
-     * 判断字符串类型
-     *
-     * @param str 字符串
-     *
-     * @return 0-string；1-JsonObject；2、JsonArray
-     */
-    public static int isJSONValid(String str) {
-        try {
-            JSONObject.parseObject(str);
-            return 1;
-        } catch (JSONException ex) {
-            try {
-                JSONObject.parseArray(str);
-                return 2;
-            } catch (JSONException ex1) {
-                return 0;
-            }
-        }
-    }
-
     /** 判断key有效性 */
-    public static boolean unRequest(BaseChain baseChain, ChaincodeMapper chaincodeMapper, AppMapper appMapper) {
-        if (!CacheUtil.getChaincodeId(baseChain.getId(), chaincodeMapper)) {
-            if (CacheUtil.getKeyChaincodeId(baseChain.getKey()) == -1 && null != appMapper.getByKey(baseChain.getKey())) {
-                CacheUtil.putKeyChaincodeId(baseChain.getKey(), baseChain.getId());
-            } else {
-                return CacheUtil.getKeyChaincodeId(baseChain.getKey()) != baseChain.getId();
+    public static String getCc(BaseChain baseChain, ChaincodeMapper chaincodeMapper, AppMapper appMapper) {
+        String cc = null;
+        if (CacheUtil.getAppBool(baseChain.getKey(), appMapper)) {
+            cc = CacheUtil.getString(baseChain.getKey());
+            if (StringUtils.isEmpty(cc)) {
+                try {
+                    cc = chaincodeMapper.get(appMapper.getByKey(baseChain.getKey()).getChaincodeId()).getCc();
+                    CacheUtil.putString(baseChain.getKey(), cc);
+                } catch (Exception e) {
+                    cc = null;
+                }
             }
         }
-        return false;
-    }
-
-    public static List<String> versions() {
-        List<String> versions = new LinkedList<>();
-        versions.add("1.0");
-        versions.add("1.1");
-        versions.add("1.2");
-        return versions;
+        return cc;
     }
 
 }

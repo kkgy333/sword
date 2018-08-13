@@ -1,6 +1,6 @@
 package com.github.kkgy333.sword.fabric.sdk.Manager;
 
-import com.github.kkgy333.sword.fabric.sdk.IntermediateOrg;
+
 import com.github.kkgy333.sword.fabric.sdk.entity.SampleOrg;
 
 public class FabricManager {

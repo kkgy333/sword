@@ -1,19 +1,23 @@
 package com.github.kkgy333.sword.fabric.server.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import com.github.kkgy333.sword.fabric.sdk.FabricManager;
 import com.github.kkgy333.sword.fabric.server.base.BaseService;
 import com.github.kkgy333.sword.fabric.server.bean.Trace;
-import com.github.kkgy333.sword.fabric.server.mapper.*;
+import com.github.kkgy333.sword.fabric.server.dao.CA;
+import com.github.kkgy333.sword.fabric.server.dao.mapper.*;
 import com.github.kkgy333.sword.fabric.server.service.TraceService;
 import com.github.kkgy333.sword.fabric.server.utils.FabricHelper;
 import com.github.kkgy333.sword.fabric.server.utils.VerifyUtil;
+import com.alibaba.fastjson.JSONObject;
+import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
-import org.hyperledger.fabric.sdk.HFClient;
+import org.apache.commons.lang3.StringUtils;
+import org.hyperledger.fabric.sdk.exception.InvalidArgumentException;
+import org.hyperledger.fabric.sdk.exception.ProposalException;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.Map;
+import java.io.IOException;
 
 /**
  * Author: kkgy333
@@ -31,94 +35,94 @@ public class TraceServiceImpl implements TraceService, BaseService {
     @Resource
     private PeerMapper peerMapper;
     @Resource
+    private CAMapper caMapper;
+    @Resource
     private ChannelMapper channelMapper;
     @Resource
     private ChaincodeMapper chaincodeMapper;
 
     @Override
     public String queryBlockByTransactionID(Trace trace) {
-        return traceByVerify(trace, TraceIntent.TRANSACTION);
+        return traceCC(trace, TraceIntent.TRANSACTION, caMapper.getByFlag(trace.getFlag()));
     }
 
     @Override
     public String queryBlockByHash(Trace trace) {
-        return traceByVerify(trace, TraceIntent.HASH);
+        return traceCC(trace, TraceIntent.HASH, caMapper.getByFlag(trace.getFlag()));
     }
 
     @Override
     public String queryBlockByNumber(Trace trace) {
-        return traceByVerify(trace, TraceIntent.NUMBER);
+        return traceCC(trace, TraceIntent.NUMBER, caMapper.getByFlag(trace.getFlag()));
     }
 
     @Override
-    public String queryBlockChainInfo(int id, String key) {
+    public String queryBlockChainInfo(String cc, String key, CA ca) {
         Trace trace = new Trace();
-        trace.setId(id);
+        trace.setChannelId(chaincodeMapper.getByCC(cc).getChannelId());
         trace.setKey(key);
-        return traceByVerify(trace, TraceIntent.INFO);
+        return traceCC(trace, TraceIntent.INFO, ca);
     }
 
     @Override
     public String queryBlockByNumberForIndex(Trace trace) {
-        return trace(trace, TraceIntent.NUMBER);
+        return trace(trace, TraceIntent.NUMBER, caMapper.list(channelMapper.get(trace.getChannelId()).getPeerId()).get(0));
     }
 
     @Override
-    public String queryBlockChainInfoForIndex(int id) {
+    public String queryBlockChainInfoForIndex(int channelId) {
         Trace trace = new Trace();
-        trace.setId(id);
-        return trace(trace, TraceIntent.INFO);
+        trace.setChannelId(channelId);
+        return trace(trace, TraceIntent.INFO, caMapper.list(channelMapper.get(channelId).getPeerId()).get(0));
     }
 
     enum TraceIntent {
         TRANSACTION, HASH, NUMBER, INFO
     }
 
-    private String traceByVerify(Trace trace, TraceIntent intent) {
-        if (VerifyUtil.unRequest(trace, chaincodeMapper, appMapper)) {
-            return responseFail("app key is invalid");
+    private String traceCC(Trace trace, TraceIntent intent, CA ca) {
+        String cc = VerifyUtil.getCc(trace, chaincodeMapper, appMapper);
+        if (StringUtils.isEmpty(cc)) {
+            return responseFail("Request failed：app key is invalid");
         }
-        return trace(trace, intent);
-    }
-
-    private String trace(Trace trace, TraceIntent intent) {
-        Map<String, String> resultMap = null;
         try {
             FabricManager manager = FabricHelper.obtain().get(orgMapper, channelMapper, chaincodeMapper, ordererMapper, peerMapper,
-                    trace.getId());
-            switch (intent) {
-                case TRANSACTION:
-                    resultMap = manager.queryBlockByTransactionID(trace.getTrace());
-                    break;
-                case HASH:
-                    resultMap = manager.queryBlockByHash(Hex.decodeHex(trace.getTrace().toCharArray()));
-                    break;
-                case NUMBER:
-                    resultMap = manager.queryBlockByNumber(Long.valueOf(trace.getTrace()));
-                    break;
-                case INFO:
-                    resultMap = manager.getBlockchainInfo();
-                    break;
-            }
-            return responseSuccess(JSONObject.parseObject(resultMap.get("data")));
+                    ca, cc);
+            return trace(manager, trace, intent);
         } catch (Exception e) {
             e.printStackTrace();
             return responseFail(String.format("Request failed： %s", e.getMessage()));
         }
     }
 
-
-    public String test(){
+    private String trace(Trace trace, TraceIntent intent, CA ca) {
         try {
-            FabricManager manager = FabricHelper.obtain().get(orgMapper, channelMapper, chaincodeMapper, ordererMapper, peerMapper,
-                    0);
-
-            HFClient client =manager.getOrg().getClient();
-
-
-        }catch (Exception e){
+            FabricManager manager = FabricHelper.obtain().get(orgMapper, channelMapper, ordererMapper, peerMapper,
+                    ca, trace.getChannelId());
+            return trace(manager, trace, intent);
+        } catch (Exception e) {
             e.printStackTrace();
+            return responseFail(String.format("Request failed： %s", e.getMessage()));
         }
-        return "";
     }
+
+    private String trace(FabricManager manager, Trace trace, TraceIntent intent) throws ProposalException, IOException, InvalidArgumentException, DecoderException {
+        JSONObject jsonObject = null;
+        switch (intent) {
+            case TRANSACTION:
+                jsonObject = manager.queryBlockByTransactionID(trace.getTrace());
+                break;
+            case HASH:
+                jsonObject = manager.queryBlockByHash(Hex.decodeHex(trace.getTrace().toCharArray()));
+                break;
+            case NUMBER:
+                jsonObject = manager.queryBlockByNumber(Long.valueOf(trace.getTrace()));
+                break;
+            case INFO:
+                jsonObject = manager.getBlockchainInfo();
+                break;
+        }
+        return jsonObject.toJSONString();
+    }
+
 }

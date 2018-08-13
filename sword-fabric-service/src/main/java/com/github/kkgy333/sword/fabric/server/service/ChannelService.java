@@ -1,6 +1,6 @@
 package com.github.kkgy333.sword.fabric.server.service;
 
-import com.github.kkgy333.sword.fabric.server.model.Channel;
+import com.github.kkgy333.sword.fabric.server.dao.Channel;
 
 import java.util.List;
 

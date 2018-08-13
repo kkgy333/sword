@@ -1,14 +1,13 @@
 package com.github.kkgy333.sword.fabric.server.controller;
 
-import com.github.kkgy333.sword.fabric.server.model.League;
-import com.github.kkgy333.sword.fabric.server.model.Org;
-import com.github.kkgy333.sword.fabric.server.model.Peer;
+import com.github.kkgy333.sword.fabric.server.dao.*;
 import com.github.kkgy333.sword.fabric.server.service.ChannelService;
 import com.github.kkgy333.sword.fabric.server.service.LeagueService;
 import com.github.kkgy333.sword.fabric.server.service.OrgService;
 import com.github.kkgy333.sword.fabric.server.service.PeerService;
 import com.github.kkgy333.sword.fabric.server.utils.SpringUtil;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -36,14 +35,17 @@ public class PeerController {
     @PostMapping(value = "submit")
     public ModelAndView submit(@ModelAttribute Peer peer,
                                @RequestParam("intent") String intent,
+                               @RequestParam("serverCrtFile") MultipartFile serverCrtFile,
                                @RequestParam("id") int id) {
         switch (intent) {
             case "add":
-                peerService.add(peer);
+                peer = resetPeer(peer);
+                peerService.add(peer, serverCrtFile);
                 break;
             case "edit":
+                peer = resetPeer(peer);
                 peer.setId(id);
-                peerService.update(peer);
+                peerService.update(peer, serverCrtFile);
                 break;
         }
         return new ModelAndView(new RedirectView("list"));
@@ -88,7 +90,7 @@ public class PeerController {
         ModelAndView modelAndView = new ModelAndView("peers");
         List<Peer> peers = peerService.listAll();
         for (Peer peer : peers) {
-            peer.setOrgName(orgService.get(peer.getOrgId()).getName());
+            peer.setOrgName(orgService.get(peer.getOrgId()).getMspId());
             peer.setChannelCount(channelService.countById(peer.getId()));
         }
         modelAndView.addObject("peers", peers);
@@ -101,6 +103,14 @@ public class PeerController {
             org.setLeagueName(leagueService.get(org.getLeagueId()).getName());
         }
         return orgs;
+    }
+
+    private Peer resetPeer(Peer peer) {
+        Org org = orgService.get(peer.getOrgId());
+        League league = leagueService.get(org.getLeagueId());
+        peer.setLeagueName(league.getName());
+        peer.setOrgName(org.getMspId());
+        return peer;
     }
 
 }

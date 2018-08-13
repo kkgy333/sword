@@ -1,6 +1,6 @@
 package com.github.kkgy333.sword.fabric.server.service;
 
-import com.github.kkgy333.sword.fabric.server.model.User;
+import com.github.kkgy333.sword.fabric.server.dao.User;
 
 /**
  * Author: kkgy333

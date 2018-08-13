@@ -80,7 +80,7 @@ public class MybatisPlusConfig {
     @Bean
     public MapperScannerConfigurer mapperScannerConfigurer() {
         MapperScannerConfigurer scannerConfigurer = new MapperScannerConfigurer();
-        scannerConfigurer.setBasePackage("com.github.kkgy333.sword.fabric.server.mapper*");
+        scannerConfigurer.setBasePackage("com.github.kkgy333.sword.fabric.server.dao.mapper*");
         return scannerConfigurer;
     }
 

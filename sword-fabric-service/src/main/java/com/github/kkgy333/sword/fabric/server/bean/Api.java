@@ -15,7 +15,7 @@ public class Api {
     public enum Intent {
         INVOKE(1, "state/invoke"),
         QUERY(2, "state/query"),
-        INFO(3, "trace/info/1"),
+        INFO(3, "trace/info"),
         HASH(4, "trace/hash"),
         NUMBER(5, "trace/number"),
         TXID(6, "trace/txid"),
@@ -56,6 +56,8 @@ public class Api {
     private String name = "";
     /** 接口意图 */
     private int index = 0;
+    /** CA 标志*/
+    private String flag = "";
     /** 请求app key */
     private String key = "";
     /** 请求Fabric版本号 */

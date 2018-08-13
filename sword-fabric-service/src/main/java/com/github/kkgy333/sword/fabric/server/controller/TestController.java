@@ -2,7 +2,7 @@ package com.github.kkgy333.sword.fabric.server.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.github.kkgy333.sword.fabric.server.model.User;
+import com.github.kkgy333.sword.fabric.server.dao.User;
 import com.github.kkgy333.sword.fabric.server.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;

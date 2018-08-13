@@ -6,7 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.github.kkgy333.sword.fabric.server.bean.Api;
 import com.github.kkgy333.sword.fabric.server.bean.State;
 import com.github.kkgy333.sword.fabric.server.bean.Trace;
-import com.github.kkgy333.sword.fabric.server.model.*;
+import com.github.kkgy333.sword.fabric.server.dao.*;
 import com.github.kkgy333.sword.fabric.server.service.*;
 import com.github.kkgy333.sword.fabric.server.utils.SpringUtil;
 import com.github.kkgy333.sword.fabric.server.utils.VerifyUtil;
@@ -40,6 +40,8 @@ public class ChaincodeController {
     @Resource
     private PeerService peerService;
     @Resource
+    private CAService caService;
+    @Resource
     private OrgService orgService;
     @Resource
     private LeagueService leagueService;
@@ -53,7 +55,7 @@ public class ChaincodeController {
     @PostMapping(value = "submit")
     public ModelAndView submit(@ModelAttribute Chaincode chaincode,
                                @ModelAttribute Api api,
-                               @RequestParam(value ="init",required = false) boolean init,
+                               @RequestParam("init") boolean init,
                                @RequestParam("intent") String intent,
                                @RequestParam(value = "sourceFile", required = false) MultipartFile sourceFile,
                                @RequestParam("id") int id) {
@@ -62,7 +64,6 @@ public class ChaincodeController {
                 chaincodeService.add(chaincode);
                 break;
             case "edit":
-                chaincode.setId(id);
                 chaincodeService.update(chaincode);
                 break;
             case "install":
@@ -100,14 +101,11 @@ public class ChaincodeController {
                 modelAndView.addObject("method", "POST");
                 break;
             case INFO:
-                result = traceService.queryBlockChainInfo(id, api.getKey());
+                String cc = chaincodeService.get(id).getCc();
+                result = traceService.queryBlockChainInfo(cc, api.getKey(), caService.getByFlag(api.getFlag()));
                 modelAndView.addObject("jsonStr", "");
                 modelAndView.addObject("method", "GET");
-                if (StringUtils.isNotBlank(api.getKey())) {
-                    modelAndView.addObject("url", String.format("%s/%s", url, api.getKey()));
-                } else {
-                    modelAndView.addObject("url", url);
-                }
+                modelAndView.addObject("url", String.format("%s/%s/%s", url, cc, api.getKey()));
                 break;
             case HASH:
                 Trace trace = getTrace(id, api);
@@ -141,9 +139,10 @@ public class ChaincodeController {
         Org org = orgService.get(peer.getOrgId());
         League league = leagueService.get(org.getLeagueId());
         chaincode.setLeagueName(league.getName());
-        chaincode.setOrgName(org.getName());
+        chaincode.setOrgName(org.getMspId());
         chaincode.setPeerName(peer.getName());
         chaincode.setChannelName(channel.getName());
+        chaincode.setFlag(api.getFlag());
 
         chaincodeService.instantiate(chaincode, Arrays.asList(api.getExec().split(",")));
         return new ModelAndView(new RedirectView("list"));
@@ -173,12 +172,12 @@ public class ChaincodeController {
         Org org = orgService.get(peer.getOrgId());
         League league = leagueService.get(org.getLeagueId());
         chaincode.setPeerName(peer.getName());
-        chaincode.setOrgName(org.getName());
+        chaincode.setOrgName(org.getMspId());
         chaincode.setLeagueName(league.getName());
         List<Channel> channels = channelService.listById(peer.getId());
         for (Channel channel : channels) {
             channel.setPeerName(peer.getName());
-            channel.setOrgName(org.getName());
+            channel.setOrgName(org.getMspId());
             channel.setLeagueName(league.getName());
         }
         modelAndView.addObject("chaincode", chaincode);
@@ -192,6 +191,7 @@ public class ChaincodeController {
         modelAndView.addObject("intentLittle", SpringUtil.get("instantiate"));
         modelAndView.addObject("submit", SpringUtil.get("submit"));
         modelAndView.addObject("chaincodeId", chaincodeId);
+        modelAndView.addObject("cas", caService.listById(channelService.get(chaincodeService.get(chaincodeId).getChannelId()).getPeerId()));
 
         Api apiInstantiate = new Api("实例化智能合约", INSTANTIATE.getIndex());
 
@@ -206,6 +206,7 @@ public class ChaincodeController {
         modelAndView.addObject("submit", SpringUtil.get("submit"));
         modelAndView.addObject("intent", "install");
         modelAndView.addObject("chaincode", new Chaincode());
+        modelAndView.addObject("cas", caService.listAll());
         modelAndView.addObject("channels", getChannelFullList());
         modelAndView.addObject("init", false);
 
@@ -223,6 +224,7 @@ public class ChaincodeController {
         modelAndView.addObject("intent", "upgrade");
         modelAndView.addObject("init", true);
         modelAndView.addObject("chaincode", chaincodeService.get(chaincodeId));
+        modelAndView.addObject("cas", caService.listById(channelService.get(chaincodeService.get(chaincodeId).getChannelId()).getPeerId()));
 
         Api apiInstantiate = new Api("升级智能合约", UPGRADE.getIndex());
 
@@ -236,7 +238,6 @@ public class ChaincodeController {
         modelAndView.addObject("intentLittle", SpringUtil.get("verify"));
         modelAndView.addObject("submit", SpringUtil.get("submit"));
         modelAndView.addObject("chaincodeId", chaincodeId);
-        modelAndView.addObject("versions", VerifyUtil.versions());
 
         List<Api> apis = new ArrayList<>();
         Api apiInvoke = new Api(SpringUtil.get("chaincode_invoke"), INVOKE.getIndex());
@@ -252,9 +253,12 @@ public class ChaincodeController {
         apis.add(apiTxid);
         apis.add(apiNumber);
 
+        List<CA> cas = caService.listById(channelService.get(chaincodeService.get(chaincodeId).getChannelId()).getPeerId());
+
         Api apiIntent = new Api();
 
         modelAndView.addObject("apis", apis);
+        modelAndView.addObject("cas", cas);
         modelAndView.addObject("apiIntent", apiIntent);
         return modelAndView;
     }
@@ -282,7 +286,7 @@ public class ChaincodeController {
             Peer peer = peerService.get(channel.getPeerId());
             channel.setPeerName(peer.getName());
             Org org = orgService.get(peer.getOrgId());
-            channel.setOrgName(org.getName());
+            channel.setOrgName(org.getMspId());
             League league = leagueService.get(org.getLeagueId());
             channel.setLeagueName(league.getName());
         }
@@ -290,9 +294,11 @@ public class ChaincodeController {
     }
 
     private State getState(int id, Api api) {
+        Chaincode chaincode = chaincodeService.get(id);
         State state = new State();
-        state.setId(id);
         state.setKey(api.getKey());
+        state.setChannelId(chaincode.getChannelId());
+        state.setFlag(api.getFlag());
         state.setVersion(api.getVersion());
         state.setStrArray(Arrays.asList(api.getExec().trim().split(",")));
         return state;
@@ -300,9 +306,9 @@ public class ChaincodeController {
 
     private String formatState(State state) {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("id", state.getId());
         if (StringUtils.isNotBlank(state.getKey())) {
             jsonObject.put("key", state.getKey());
+            jsonObject.put("flag", state.getFlag());
         }
         JSONArray jsonArray = JSONArray.parseArray(JSON.toJSONString(state.getStrArray()));
         jsonObject.put("strArray", jsonArray);
@@ -310,8 +316,10 @@ public class ChaincodeController {
     }
 
     private Trace getTrace(int id, Api api) {
+        Chaincode chaincode = chaincodeService.get(id);
         Trace trace = new Trace();
-        trace.setId(id);
+        trace.setChannelId(chaincode.getChannelId());
+        trace.setFlag(api.getFlag());
         trace.setKey(api.getKey());
         trace.setVersion(api.getVersion());
         trace.setTrace(api.getExec().trim());
@@ -320,9 +328,9 @@ public class ChaincodeController {
 
     private String formatTrace(Trace trace) {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("id", trace.getId());
         if (StringUtils.isNotBlank(trace.getKey())) {
             jsonObject.put("key", trace.getKey());
+            jsonObject.put("flag", trace.getFlag());
         }
         jsonObject.put("trace", trace.getTrace());
         return jsonObject.toJSONString();
@@ -334,7 +342,7 @@ public class ChaincodeController {
         Org org = orgService.get(peer.getOrgId());
         League league = leagueService.get(org.getLeagueId());
         chaincode.setLeagueName(league.getName());
-        chaincode.setOrgName(org.getName());
+        chaincode.setOrgName(org.getMspId());
         chaincode.setPeerName(peer.getName());
         chaincode.setChannelName(channel.getName());
         return chaincode;
