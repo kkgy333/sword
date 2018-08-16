@@ -1,7 +1,7 @@
 package com.github.kkgy333.sword.fabric.server.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.github.kkgy333.sword.fabric.server.dao.Org;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -9,11 +9,11 @@ import java.util.List;
  * Author: kkgy333
  * Date: 2018/7/23
  **/
-public interface OrgService {
+public interface OrgService extends IService<Org> {
 
-    int add(Org org);
+    boolean add(Org org);
 
-    int update(Org org);
+    boolean update(Org org);
 
     List<Org> listAll();
 
@@ -25,5 +25,5 @@ public interface OrgService {
 
     int count();
 
-    int delete(int id);
+    boolean delete(int id);
 }

@@ -26,7 +26,7 @@ import java.util.List;
  * 作者：Aberic on 2018/6/9 13:53
  * 邮箱：abericyang@gmail.com
  */
-@Mapper
+//@Mapper
 public interface OrdererMapper extends BaseMapper<Orderer> {
 
 //    @Insert("insert into orderer (name,location,server_crt_path,org_id,date) values (#{o.name},#{o.location},#{o.serverCrtPath},#{o.orgId},#{o.date})")
@@ -37,6 +37,10 @@ public interface OrdererMapper extends BaseMapper<Orderer> {
 //
 //    @Update("update orderer set name=#{o.name}, location=#{o.location} where id=#{o.id}")
 //    int updateWithNoFile(@Param("o") Orderer orderer);
+
+
+      boolean updateWithNoFile(@Param("o") Orderer orderer);
+
 //
 //    @Select("select count(name) from orderer where org_id=#{id}")
 //    int count(@Param("id") int id);

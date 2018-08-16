@@ -32,8 +32,9 @@ spring:
     restart:
       enabled: false
 
-  # H2 DATABASE CONFIG
+  # DATABASE CONFIG
   datasource:
+      #如果mybatis时区不正确可以使用在mysql.url后加上 serverTimezone=Hongkong 解决
       url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/sword?useUnicode=true&characterEncoding=UTF8&useSSL=false&allowPublicKeyRetrieval=true
       username: root
       password: "!QAZ2wsx"
@@ -53,6 +54,10 @@ spring:
       testOnReturn: false
       poolPreparedStatements: true
       maxOpenPreparedStatements: 20
+  # 解决Spring 返回json时间不正确问题
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8    #或UTC
   mvc:
     static-path-pattern: /static/**
   thymeleaf:

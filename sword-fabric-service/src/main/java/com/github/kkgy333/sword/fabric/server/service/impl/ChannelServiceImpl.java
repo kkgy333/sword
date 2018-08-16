@@ -1,11 +1,12 @@
 package com.github.kkgy333.sword.fabric.server.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.kkgy333.sword.fabric.server.dao.mapper.*;
 import com.github.kkgy333.sword.fabric.server.dao.*;
 import com.github.kkgy333.sword.fabric.server.service.ChannelService;
-import com.github.kkgy333.sword.fabric.server.utils.DateUtil;
-import com.github.kkgy333.sword.fabric.server.utils.DeleteUtil;
-import com.github.kkgy333.sword.fabric.server.utils.FabricHelper;
+import com.github.kkgy333.sword.fabric.server.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -15,62 +16,69 @@ import java.util.List;
 
 @Slf4j
 @Service("channelService")
-public class ChannelServiceImpl implements ChannelService {
+public class ChannelServiceImpl extends ServiceImpl<ChannelMapper, Channel> implements ChannelService {
 
     @Resource
     private ChannelMapper channelMapper;
-    @Resource
-    private ChaincodeMapper chaincodeMapper;
-    @Resource
-    private AppMapper appMapper;
+//    @Resource
+//    private ChaincodeMapper chaincodeMapper;
+//    @Resource
+//    private AppMapper appMapper;
 
     @Override
-    public int add(Channel channel) {
+    public boolean add(Channel channel) {
         if (StringUtils.isEmpty(channel.getName())) {
             log.debug("channel name is empty");
-            return 0;
+            return false;
         }
         if (null != channelMapper.check(channel)) {
             log.debug("had the same channel in this peer");
-            return 0;
+            return false;
         }
         channel.setDate(DateUtil.getCurrent("yyyy-MM-dd"));
-        return channelMapper.add(channel);
+        return super.save(channel);
     }
 
     @Override
-    public int update(Channel channel) {
-        FabricHelper.obtain().removeChaincodeManager(chaincodeMapper.list(channel.getId()));
-        return channelMapper.update(channel);
+    public boolean update(Channel channel) {
+//        FabricHelper.obtain().removeChaincodeManager(chaincodeMapper.list(channel.getId()));
+        return super.updateById(channel);
     }
 
     @Override
     public List<Channel> listAll() {
-        return channelMapper.listAll();
+        return super.list(null);
     }
 
     @Override
     public List<Channel> listById(int id) {
-        return channelMapper.list(id);
+        Wrapper<Channel> queryWrapper = new QueryWrapper<Channel>();
+        ((QueryWrapper<Channel>) queryWrapper).eq("peer_id",id);
+        return super.list(queryWrapper);
     }
 
     @Override
     public Channel get(int id) {
-        return channelMapper.get(id);
+        Wrapper<Channel> queryWrapper = new QueryWrapper<Channel>();
+        ((QueryWrapper<Channel>) queryWrapper).eq("id",id);
+        return super.getOne(queryWrapper);
     }
 
     @Override
     public int countById(int id) {
-        return channelMapper.count(id);
+        Wrapper<Channel> queryWrapper = new QueryWrapper<Channel>();
+        ((QueryWrapper<Channel>) queryWrapper).eq("peer_id",id);
+        return super.count(queryWrapper);
     }
 
     @Override
     public int count() {
-        return channelMapper.countAll();
+        return super.count(null);
     }
 
     @Override
-    public int delete(int id) {
-        return DeleteUtil.obtain().deleteChannel(id, channelMapper, chaincodeMapper, appMapper);
+    public boolean delete(int id) {
+        //return DeleteUtil.obtain().deleteChannel(id, channelMapper, chaincodeMapper, appMapper);
+        return false;
     }
 }

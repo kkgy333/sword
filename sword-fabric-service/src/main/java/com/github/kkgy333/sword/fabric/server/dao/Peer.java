@@ -16,9 +16,16 @@
 
 package com.github.kkgy333.sword.fabric.server.dao;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.activerecord.Model;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+
+import java.io.Serializable;
 
 /**
  * 作者：Aberic on 2018/6/27 21:15
@@ -27,16 +34,29 @@ import lombok.ToString;
 @Setter
 @Getter
 @ToString
-public class Peer {
-
+@TableName(value="peer")
+public class Peer extends Model<Peer> {
+    private static final long serialVersionUID = 1L;
+    @TableId(value="id", type= IdType.AUTO)
     private int id; // required
     private String name; // required
     private String location; // required
+    @TableField(value = "event_hub_location")
     private String eventHubLocation; // required
+    @TableField(value = "org_id")
     private int orgId; // required
     private String serverCrtPath;
+    @TableField(exist = false)
     private String orgName; // required
+    @TableField(exist = false)
     private String leagueName; // optional
     private String date; // required
+    @TableField(exist = false)
     private int channelCount; // required
+
+
+    @Override
+    protected Serializable pkVal() {
+        return this.getId();
+    }
 }

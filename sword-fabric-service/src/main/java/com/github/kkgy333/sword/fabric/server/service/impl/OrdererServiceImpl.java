@@ -2,17 +2,12 @@ package com.github.kkgy333.sword.fabric.server.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.github.kkgy333.sword.fabric.server.dao.mapper.ChaincodeMapper;
-import com.github.kkgy333.sword.fabric.server.dao.mapper.ChannelMapper;
-import com.github.kkgy333.sword.fabric.server.dao.mapper.OrdererMapper;
-import com.github.kkgy333.sword.fabric.server.dao.mapper.PeerMapper;
-import com.github.kkgy333.sword.fabric.server.dao.Orderer;
-import com.github.kkgy333.sword.fabric.server.dao.Org;
-import com.github.kkgy333.sword.fabric.server.dao.Peer;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.github.kkgy333.sword.fabric.server.dao.mapper.*;
+import com.github.kkgy333.sword.fabric.server.dao.*;
+import com.github.kkgy333.sword.fabric.server.service.LeagueService;
 import com.github.kkgy333.sword.fabric.server.service.OrdererService;
-import com.github.kkgy333.sword.fabric.server.utils.DateUtil;
-import com.github.kkgy333.sword.fabric.server.utils.FabricHelper;
-import com.github.kkgy333.sword.fabric.server.utils.FileUtil;
+import com.github.kkgy333.sword.fabric.server.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
@@ -26,56 +21,57 @@ import java.util.List;
 
 @Slf4j
 @Service("ordererService")
-public class OrdererServiceImpl implements OrdererService {
+public class OrdererServiceImpl extends ServiceImpl<OrdererMapper, Orderer> implements OrdererService {
 
-    @Resource
-    private OrdererMapper ordererMapper;
-    @Resource
-    private PeerMapper peerMapper;
-    @Resource
-    private ChannelMapper channelMapper;
-    @Resource
-    private ChaincodeMapper chaincodeMapper;
+    //    @Resource
+//    private PeerMapper peerMapper;
+
+//    @Resource
+//    private PeerMapper peerMapper;
+//    @Resource
+//    private ChannelMapper channelMapper;
+//    @Resource
+//    private ChaincodeMapper chaincodeMapper;
     @Resource
     private Environment env;
 
     @Override
-    public int add(Orderer orderer, MultipartFile serverCrtFile) {
+    public boolean add(Orderer orderer, MultipartFile serverCrtFile) {
         if (StringUtils.isEmpty(orderer.getName()) ||
                 StringUtils.isEmpty(orderer.getLocation())) {
-            return 0;
+            return false;
         }
         if (StringUtils.isNotEmpty(serverCrtFile.getOriginalFilename())) {
             if (saveFileFail(orderer, serverCrtFile)) {
-                return 0;
+                return false;
             }
         }
         orderer.setDate(DateUtil.getCurrent("yyyy-MM-dd"));
-        return ordererMapper.insert(orderer);
+        return super.save(orderer);
     }
 
     @Override
-    public int update(Orderer orderer, MultipartFile serverCrtFile) {
-        FabricHelper.obtain().removeChaincodeManager(peerMapper.list(orderer.getOrgId()), channelMapper, chaincodeMapper);
+    public boolean update(Orderer orderer, MultipartFile serverCrtFile) {
+        //FabricHelper.obtain().removeChaincodeManager(peerMapper.list(orderer.getOrgId()), channelMapper, chaincodeMapper);
         if (null == serverCrtFile) {
-            return ordererMapper.updateWithNoFile(orderer);
+            return this.baseMapper.updateWithNoFile(orderer);
         }
         if (saveFileFail(orderer, serverCrtFile)) {
-            return 0;
+            return false;
         }
-        return ordererMapper.updateById(orderer);
+        return super.updateById(orderer);
     }
 
     @Override
     public List<Orderer> listAll() {
-        return ordererMapper.selectList(null);
+        return super.list(null);
     }
 
     @Override
     public List<Orderer> listById(int id) {
         Wrapper<Orderer> queryWrapper = new QueryWrapper<Orderer>();
         ((QueryWrapper<Orderer>) queryWrapper).eq("org_id",id);
-        return ordererMapper.selectList(queryWrapper);
+        return super.list(queryWrapper);
     }
 
     @Override
@@ -83,7 +79,7 @@ public class OrdererServiceImpl implements OrdererService {
 
         Wrapper<Orderer> queryWrapper = new QueryWrapper<Orderer>();
         ((QueryWrapper<Orderer>) queryWrapper).eq("id",id);
-        return ordererMapper.selectOne(queryWrapper);
+        return super.getOne(queryWrapper);
 
     }
 
@@ -92,17 +88,19 @@ public class OrdererServiceImpl implements OrdererService {
 
         Wrapper<Orderer> queryWrapper = new QueryWrapper<Orderer>();
         ((QueryWrapper<Orderer>) queryWrapper).eq("org_id",id);
-        return ordererMapper.selectCount(queryWrapper);
+        return super.count(queryWrapper);
     }
 
     @Override
     public int count() {
-        return ordererMapper.selectCount(null);
+        return super.count(null);
     }
 
     @Override
-    public int delete(int id) {
-        return ordererMapper.deleteById(id);
+    public boolean delete(int id) {
+        Wrapper<Orderer> queryWrapper = new QueryWrapper<Orderer>();
+        ((QueryWrapper<Orderer>) queryWrapper).eq("id",id);
+        return super.remove(queryWrapper);
     }
 
     private boolean saveFileFail(Orderer orderer, MultipartFile serverCrtFile) {

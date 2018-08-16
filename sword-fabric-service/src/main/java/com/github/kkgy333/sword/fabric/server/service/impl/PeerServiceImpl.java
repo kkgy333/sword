@@ -2,6 +2,7 @@ package com.github.kkgy333.sword.fabric.server.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.kkgy333.sword.fabric.server.dao.mapper.*;
 import com.github.kkgy333.sword.fabric.server.dao.*;
 import com.github.kkgy333.sword.fabric.server.service.PeerService;
@@ -21,84 +22,85 @@ import java.util.List;
  * Date: 2018/7/23
  **/
 @Service("peerService")
-public class PeerServiceImpl implements PeerService {
+public class PeerServiceImpl extends ServiceImpl<PeerMapper, Peer> implements PeerService {
 
     @Resource
     private PeerMapper peerMapper;
-    @Resource
-    private CAMapper caMapper;
-    @Resource
-    private ChannelMapper channelMapper;
-    @Resource
-    private ChaincodeMapper chaincodeMapper;
-    @Resource
-    private AppMapper appMapper;
+//    @Resource
+//    private CAMapper caMapper;
+//    @Resource
+//    private ChannelMapper channelMapper;
+//    @Resource
+//    private ChaincodeMapper chaincodeMapper;
+//    @Resource
+//    private AppMapper appMapper;
     @Resource
     private Environment env;
 
     @Override
-    public int add(Peer peer, MultipartFile serverCrtFile) {
+    public boolean add(Peer peer, MultipartFile serverCrtFile) {
         if (StringUtils.isEmpty(peer.getName()) ||
                 StringUtils.isEmpty(peer.getLocation()) ||
                 StringUtils.isEmpty(peer.getEventHubLocation())) {
-            return 0;
+            return false;
         }
         if (StringUtils.isNotEmpty(serverCrtFile.getOriginalFilename())) {
             if (saveFileFail(peer, serverCrtFile)) {
-                return 0;
+                return false;
             }
         }
         peer.setDate(DateUtil.getCurrent("yyyy-MM-dd"));
-        return peerMapper.insert(peer);
+        return super.save(peer);
     }
 
     @Override
-    public int update(Peer peer, MultipartFile serverCrtFile) {
-        FabricHelper.obtain().removeChaincodeManager(channelMapper.list(peer.getId()), chaincodeMapper);
-        CacheUtil.removeFlagCA(peer.getId(), caMapper);
+    public boolean update(Peer peer, MultipartFile serverCrtFile) {
+//        FabricHelper.obtain().removeChaincodeManager(channelMapper.list(peer.getId()), chaincodeMapper);
+//        CacheUtil.removeFlagCA(peer.getId(), caMapper);
         if (null == serverCrtFile) {
             return peerMapper.updateWithNoFile(peer);
         }
         if (saveFileFail(peer, serverCrtFile)) {
-            return 0;
+            return false;
         }
-        return peerMapper.updateById(peer);
+        return super.updateById(peer);
     }
 
     @Override
     public List<Peer> listAll() {
-        return peerMapper.listAll();
+        return super.list(null);
     }
 
     @Override
     public List<Peer> listById(int id) {
         Wrapper<Peer> queryWrapper = new QueryWrapper<Peer>();
         ((QueryWrapper<Peer>) queryWrapper).eq("org_id",id);
-        return peerMapper.selectList(queryWrapper);
+        return super.list(queryWrapper);
     }
 
     @Override
     public Peer get(int id) {
         Wrapper<Peer> queryWrapper = new QueryWrapper<Peer>();
         ((QueryWrapper<Peer>) queryWrapper).eq("id",id);
-        return peerMapper.selectOne(queryWrapper);
+        return super.getOne(queryWrapper);
     }
 
     @Override
     public int countById(int id) {
         Wrapper<Peer> queryWrapper = new QueryWrapper<Peer>();
         ((QueryWrapper<Peer>) queryWrapper).eq("org_id",id);
-        return peerMapper.selectCount(queryWrapper);
+        return super.count(queryWrapper);
     }
 
     @Override
     public int count() {
-        return peerMapper.selectCount(null);
+        return super.count(null);
     }
 
     @Override
-    public int delete(int id) {
-        return DeleteUtil.obtain().deletePeer(id, peerMapper, caMapper, channelMapper, chaincodeMapper, appMapper);
+    public boolean delete(int id) {
+        //return DeleteUtil.obtain().deletePeer(id, peerMapper, caMapper, channelMapper, chaincodeMapper, appMapper);
+        return false;
     }
 
     private boolean saveFileFail(Peer peer, MultipartFile serverCrtFile) {

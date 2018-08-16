@@ -1,5 +1,7 @@
 package com.github.kkgy333.sword.fabric.server.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.github.kkgy333.sword.fabric.server.dao.Org;
 import com.github.kkgy333.sword.fabric.server.dao.Peer;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -9,11 +11,11 @@ import java.util.List;
  * Author: kkgy333
  * Date: 2018/7/23
  **/
-public interface PeerService {
+public interface PeerService extends IService<Peer> {
     
-    int add(Peer peer, MultipartFile serverCrtFile);
+    boolean add(Peer peer, MultipartFile serverCrtFile);
 
-    int update(Peer peer, MultipartFile serverCrtFile);
+    boolean update(Peer peer, MultipartFile serverCrtFile);
 
     List<Peer> listAll();
 
@@ -25,5 +27,5 @@ public interface PeerService {
 
     int count();
 
-    int delete(int id);
+    boolean delete(int id);
 }

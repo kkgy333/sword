@@ -1,11 +1,12 @@
 package com.github.kkgy333.sword.fabric.server.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.kkgy333.sword.fabric.server.dao.mapper.*;
 import com.github.kkgy333.sword.fabric.server.dao.*;
 import com.github.kkgy333.sword.fabric.server.service.OrgService;
-import com.github.kkgy333.sword.fabric.server.utils.DateUtil;
-import com.github.kkgy333.sword.fabric.server.utils.DeleteUtil;
-import com.github.kkgy333.sword.fabric.server.utils.FabricHelper;
+import com.github.kkgy333.sword.fabric.server.utils.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -17,42 +18,41 @@ import java.util.List;
  * Date: 2018/7/23
  **/
 @Service("orgService")
-public class OrgServiceImpl implements OrgService {
+public class OrgServiceImpl extends ServiceImpl<OrgMapper, Org> implements  OrgService {
 
-    @Resource
-    private OrgMapper orgMapper;
-    @Resource
-    private PeerMapper peerMapper;
-    @Resource
-    private CAMapper caMapper;
-    @Resource
-    private OrdererMapper ordererMapper;
-    @Resource
-    private ChannelMapper channelMapper;
-    @Resource
-    private ChaincodeMapper chaincodeMapper;
-    @Resource
-    private AppMapper appMapper;
+
+//    @Resource
+//    private PeerMapper peerMapper;
+//    @Resource
+//    private CAMapper caMapper;
+//    @Resource
+//    private OrdererMapper ordererMapper;
+//    @Resource
+//    private ChannelMapper channelMapper;
+//    @Resource
+//    private ChaincodeMapper chaincodeMapper;
+//    @Resource
+//    private AppMapper appMapper;
 
 
     @Override
-    public int add(Org org) {
+    public boolean add(Org org) {
         if (StringUtils.isEmpty(org.getMspId())) {
-            return 0;
+            return false;
         }
         org.setDate(DateUtil.getCurrent("yyyy-MM-dd"));
-        return orgMapper.insert(org);
+        return super.save(org);
     }
 
     @Override
-    public int update(Org org) {
-        FabricHelper.obtain().removeChaincodeManager(peerMapper.list(org.getId()), channelMapper, chaincodeMapper);
-        return orgMapper.updateById(org);
+    public boolean update(Org org) {
+        //FabricHelper.obtain().removeChaincodeManager(peerMapper.list(org.getId()), channelMapper, chaincodeMapper);
+        return super.updateById(org);
     }
 
     @Override
     public List<Org> listAll() {
-        return orgMapper.selectList(null);
+        return super.list(null);
     }
 
     @Override
@@ -60,7 +60,7 @@ public class OrgServiceImpl implements OrgService {
 
         Wrapper<Org> queryWrapper = new QueryWrapper<Org>();
         ((QueryWrapper<Org>) queryWrapper).eq("league_id",id);
-        return orgMapper.selectList(queryWrapper);
+        return super.list(queryWrapper);
     }
 
     @Override
@@ -68,7 +68,7 @@ public class OrgServiceImpl implements OrgService {
 
         Wrapper<Org> queryWrapper = new QueryWrapper<Org>();
         ((QueryWrapper<Org>) queryWrapper).eq("id",id);
-        return orgMapper.selectOne(queryWrapper);
+        return super.getOne(queryWrapper);
 
     }
 
@@ -77,18 +77,19 @@ public class OrgServiceImpl implements OrgService {
 
         Wrapper<Org> queryWrapper = new QueryWrapper<Org>();
         ((QueryWrapper<Org>) queryWrapper).eq("league_id",id);
-        return orgMapper.selectCount(queryWrapper);
+        return super.count(queryWrapper);
     }
 
     @Override
     public int count() {
-        return orgMapper.selectCount(null);
+        return super.count(null);
 
     }
 
     @Override
-    public int delete(int id) {
-        return DeleteUtil.obtain().deleteOrg(id, orgMapper, ordererMapper, peerMapper, caMapper, channelMapper, chaincodeMapper, appMapper);
+    public boolean delete(int id) {
+        //return DeleteUtil.obtain().deleteOrg(id, orgMapper, ordererMapper, peerMapper, caMapper, channelMapper, chaincodeMapper, appMapper);
+        return false;
     }
 
 }

@@ -2,6 +2,7 @@ package com.github.kkgy333.sword.fabric.server.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.kkgy333.sword.fabric.server.dao.mapper.*;
 import com.github.kkgy333.sword.fabric.server.dao.*;
 import com.github.kkgy333.sword.fabric.server.service.UserService;
@@ -12,41 +13,39 @@ import javax.annotation.Resource;
 import java.util.List;
 
 @Service("userService")
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
-    @Resource
-    private UserMapper userMapper;
 
     @Override
-    public int init(User user) {
+    public boolean init(User user) {
         if (StringUtils.isEmpty(user.getUsername()) || StringUtils.isEmpty(user.getPassword())) {
-            return 0;
+            return false;
         }
-        List<User> users = listAll();
+        List<User> users = super.list(null);
         for (User user1 : users) {
             if (StringUtils.equals(user.getUsername(), user1.getUsername())) {
-                return update(user);
+                return super.updateById(user);
             }
         }
-        return add(user);
+        return super.save(user);
     }
 
     @Override
-    public int add(User user) {
+    public boolean add(User user) {
         if (StringUtils.isEmpty(user.getUsername()) || StringUtils.isEmpty(user.getPassword())) {
-            return 0;
+            return false;
         }
-        return userMapper.insert(user);
+        return super.save(user);
     }
 
     @Override
-    public int update(User user) {
-        return userMapper.updateById(user);
+    public boolean update(User user) {
+        return super.updateById(user);
     }
 
     @Override
     public List<User> listAll() {
-        return userMapper.selectList(null);
+        return super.list(null);
     }
 
     @Override
@@ -54,7 +53,7 @@ public class UserServiceImpl implements UserService {
 
         Wrapper<User> queryWrapper = new QueryWrapper<User>();
         ((QueryWrapper<User>) queryWrapper).eq("username",username);
-        User user = userMapper.selectOne(queryWrapper);
+        User user = super.getOne(queryWrapper);
         return user;
     }
 

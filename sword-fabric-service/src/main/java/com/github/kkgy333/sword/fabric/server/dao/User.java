@@ -16,9 +16,15 @@
 
 package com.github.kkgy333.sword.fabric.server.dao;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.activerecord.Model;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+
+import java.io.Serializable;
 
 /**
  * 作者：Aberic on 2018/6/27 21:12
@@ -27,10 +33,15 @@ import lombok.ToString;
 @Setter
 @Getter
 @ToString
-public class User {
-
+@TableName(value="user")
+public class User extends Model<User> {
+    private static final long serialVersionUID = 1L;
+    @TableId(value="id", type= IdType.AUTO)
     private int id; // required
     private String username; // required
     private String password; // required
-
+    @Override
+    protected Serializable pkVal() {
+        return this.getId();
+    }
 }

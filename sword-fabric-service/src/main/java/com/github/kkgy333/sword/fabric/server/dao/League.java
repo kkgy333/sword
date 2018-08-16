@@ -16,9 +16,16 @@
 
 package com.github.kkgy333.sword.fabric.server.dao;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.activerecord.Model;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+
+import java.io.Serializable;
 
 /**
  * 作者：Aberic on 2018/6/27 21:12
@@ -27,11 +34,17 @@ import lombok.ToString;
 @Setter
 @Getter
 @ToString
-public class League {
-
+@TableName(value="league")
+public class League extends Model<League> {
+    private static final long serialVersionUID = 1L;
+    @TableId(value="id", type= IdType.AUTO)
     private int id; // required
     private String name; // required
     private String date; // required
+    @TableField(exist = false)
     private int orgCount; // required
-
+    @Override
+    protected Serializable pkVal() {
+        return this.getId();
+    }
 }

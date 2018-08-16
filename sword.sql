@@ -134,7 +134,7 @@ CREATE TABLE `orderer`  (
 -- ----------------------------
 DROP TABLE IF EXISTS `org`;
 CREATE TABLE `org`  (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `tls` int(11) NOT NULL,
   `msp_id` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `league_id` int(11) NOT NULL,

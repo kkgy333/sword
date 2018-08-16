@@ -1,6 +1,8 @@
 package com.github.kkgy333.sword.fabric.server.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.github.kkgy333.sword.fabric.server.dao.Channel;
+import com.github.kkgy333.sword.fabric.server.dao.League;
 
 import java.util.List;
 
@@ -8,11 +10,11 @@ import java.util.List;
  * Author: kkgy333
  * Date: 2018/7/23
  **/
-public interface ChannelService {
+public interface ChannelService extends IService<Channel> {
 
-    int add(Channel channel);
+    boolean add(Channel channel);
 
-    int update(Channel channel);
+    boolean update(Channel channel);
 
     List<Channel> listAll();
 
@@ -24,5 +26,5 @@ public interface ChannelService {
 
     int count();
 
-    int delete(int id);
+    boolean delete(int id);
 }

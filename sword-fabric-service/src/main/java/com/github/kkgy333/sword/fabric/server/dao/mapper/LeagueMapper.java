@@ -26,7 +26,7 @@ import java.util.List;
  * 作者：Aberic on 2018/6/9 13:53
  * 邮箱：abericyang@gmail.com
  */
-@Mapper
+//@Mapper
 public interface LeagueMapper extends BaseMapper<League> {
 
 

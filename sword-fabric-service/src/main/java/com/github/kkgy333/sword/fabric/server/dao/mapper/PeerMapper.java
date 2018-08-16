@@ -17,6 +17,7 @@
 package com.github.kkgy333.sword.fabric.server.dao.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.github.kkgy333.sword.fabric.server.dao.Orderer;
 import com.github.kkgy333.sword.fabric.server.dao.Peer;
 import com.github.kkgy333.sword.fabric.server.dao.User;
 import org.apache.ibatis.annotations.*;
@@ -42,6 +43,10 @@ public interface PeerMapper extends BaseMapper<Peer> {
 //    @Update("update peer set name=#{p.name}, location=#{p.location}" +
 //            ", event_hub_location=#{p.eventHubLocation} where id=#{p.id}")
 //    int updateWithNoFile(@Param("p") Peer peer);
+
+
+    boolean updateWithNoFile(@Param("p") Peer peer);
+
 //
 //    @Select("select count(name) from peer where org_id=#{id}")
 //    int count(@Param("id") int id);
