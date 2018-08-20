@@ -11,5 +11,11 @@
         <module name="sword-fabric-service" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="sword-auth" target="1.7" />
+      <module name="sword-fabric-sdk" target="1.8" />
+      <module name="sword-fabric-service" target="1.8" />
+      <module name="sword-root" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
 </project>
